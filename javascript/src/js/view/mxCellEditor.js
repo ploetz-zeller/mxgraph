@@ -123,6 +123,17 @@ function mxCellEditor(graph)
 	
 	this.graph.view.addListener(mxEvent.SCALE, this.zoomHandler);
 	this.graph.view.addListener(mxEvent.SCALE_AND_TRANSLATE, this.zoomHandler);
+	
+	// Adds handling of deleted cells while editing
+	this.changeHandler = mxUtils.bind(this, function(sender)
+	{
+		if (this.editingCell != null && this.graph.getView().getState(this.editingCell) == null)
+		{
+			this.stopEditing(true);
+		}
+	});
+
+	this.graph.getModel().addListener(mxEvent.CHANGE, this.changeHandler);
 };
 
 /**
@@ -252,6 +263,12 @@ mxCellEditor.prototype.init = function ()
 	this.textarea.className = 'mxCellEditor mxPlainTextEditor';
 	this.textarea.contentEditable = true;
 	
+	// Workaround for selection outside of DIV if height is 0
+	if (mxClient.IS_GC)
+	{
+		this.textarea.style.minHeight = '1em';
+	}
+	
 	this.installListeners(this.textarea);
 };
 
@@ -291,15 +308,7 @@ mxCellEditor.prototype.getInitialValue = function(state, trigger)
  */
 mxCellEditor.prototype.getCurrentValue = function(state)
 {
-	var result = mxUtils.extractTextWithWhitespace(this.textarea.childNodes);
-	
-    // Strips trailing line break
-    if (result.length > 0 && result.charAt(result.length - 1) == '\n')
-    {
-    	result = result.substring(0, result.length - 1);
-    }
-	
-	return result;
+	return mxUtils.extractTextWithWhitespace(this.textarea.childNodes);
 };
 
 /**
@@ -336,17 +345,6 @@ mxCellEditor.prototype.installListeners = function(elt)
 		}
 	}));
 
-	// Adds handling of deleted cells while editing
-	this.changeHandler = mxUtils.bind(this, function(sender)
-	{
-		if (this.editingCell != null && this.graph.getView().getState(this.editingCell) == null)
-		{
-			this.stopEditing(true);
-		}
-	});
-
-	this.graph.getModel().addListener(mxEvent.CHANGE, this.changeHandler);
-	
 	// Keypress only fires if printable key was pressed and handles removing the empty placeholder
 	var keypressHandler = mxUtils.bind(this, function(evt)
 	{
@@ -464,7 +462,7 @@ mxCellEditor.prototype.resize = function()
 	{
 		this.stopEditing(true);
 	}
-	else
+	else if (this.textarea != null)
 	{
 		var isEdge = this.graph.getModel().isEdge(state.cell);
  		var scale = this.graph.getView().scale;
@@ -677,7 +675,9 @@ mxCellEditor.prototype.getBackgroundColor = function(state)
  */
 mxCellEditor.prototype.startEditing = function(cell, trigger)
 {
-	// Lazy instantiates textarea to save memory in IE
+	this.stopEditing(true);
+	
+	// Creates new textarea instance
 	if (this.textarea == null)
 	{
 		this.init();
@@ -688,7 +688,6 @@ mxCellEditor.prototype.startEditing = function(cell, trigger)
 		this.graph.tooltipHandler.hideTooltip();
 	}
 	
-	this.stopEditing(true);
 	var state = this.graph.getView().getState(cell);
 	
 	if (state != null)
@@ -779,24 +778,21 @@ mxCellEditor.prototype.startEditing = function(cell, trigger)
 		
 		this.resize();
 		
-		if (this.textarea != null)
+		// Workaround for NS_ERROR_FAILURE in FF
+		try
 		{
-			// Workaround for NS_ERROR_FAILURE in FF
-			try
+			// Prefers blinking cursor over no selected text if empty
+			this.textarea.focus();
+			
+			if (this.isSelectText() && this.textarea.innerHTML.length > 0 &&
+				(this.textarea.innerHTML != this.getEmptyLabelText() || !this.clearOnChange))
 			{
-				// Prefers blinking cursor over no selected text if empty
-				this.textarea.focus();
-				
-				if (this.isSelectText() && this.textarea.innerHTML.length > 0 &&
-					(this.textarea.innerHTML != this.getEmptyLabelText() || !this.clearOnChange))
-				{
-					document.execCommand('selectAll', false, null);
-				}
+				document.execCommand('selectAll', false, null);
 			}
-			catch (e)
-			{
-				// ignore
-			}
+		}
+		catch (e)
+		{
+			// ignore
 		}
 	}
 };
@@ -850,6 +846,7 @@ mxCellEditor.prototype.stopEditing = function(cancel)
 		
 		if (state != null && this.textarea.innerHTML != initial)
 		{
+			this.prepareTextarea();
 			var value = this.getCurrentValue(state);
 			
 			if (value != null)
@@ -857,6 +854,25 @@ mxCellEditor.prototype.stopEditing = function(cancel)
 				this.applyValue(state, value);
 			}
 		}
+		
+		// Forces new instance on next edit for undo history reset
+		mxEvent.release(this.textarea);
+		this.textarea = null;
+	}
+};
+
+/**
+ * Function: prepareTextarea
+ * 
+ * Prepares the textarea for getting its value in <stopEditing>.
+ * This implementation removes the extra trailing linefeed in Firefox.
+ */
+mxCellEditor.prototype.prepareTextarea = function()
+{
+	if (mxClient.IS_FF && this.textarea.lastChild != null &&
+		this.textarea.lastChild.nodeName == 'BR')
+	{
+		this.textarea.removeChild(this.textarea.lastChild);
 	}
 };
 
@@ -1036,17 +1052,18 @@ mxCellEditor.prototype.destroy = function ()
 		}
 		
 		this.textarea = null;
-		
-		if (this.changeHandler != null)
-		{
-			this.graph.getModel().removeListener(this.changeHandler);
-			this.changeHandler = null;
-		}
-		
-		if (this.zoomHandler)
-		{
-			this.graph.view.removeListener(this.zoomHandler);
-			this.zoomHandler = null;
-		}
+
+	}
+			
+	if (this.changeHandler != null)
+	{
+		this.graph.getModel().removeListener(this.changeHandler);
+		this.changeHandler = null;
+	}
+
+	if (this.zoomHandler)
+	{
+		this.graph.view.removeListener(this.zoomHandler);
+		this.zoomHandler = null;
 	}
 };

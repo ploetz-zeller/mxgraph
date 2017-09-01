@@ -872,6 +872,7 @@ mxCellRenderer.prototype.redrawLabel = function(state, forced)
 		// result in getLabelBounds we apply the new style to the shape
 		if (forced)
 		{
+
 			// Checks if a full repaint is needed
 			if (state.text.lastValue != null && this.isTextShapeInvalid(state, state.text))
 			{
@@ -882,8 +883,8 @@ mxCellRenderer.prototype.redrawLabel = function(state, forced)
 			state.text.resetStyles();
 			state.text.apply(state);
 			
-			// Special case opacity which is taken from textOpacity style for text
-			state.text.opacity = mxUtils.getValue(state.style, mxConstants.STYLE_TEXT_OPACITY, 100);
+			// Special case where value is obtained via hook in graph
+			state.text.valign = graph.getVerticalAlign(state);
 		}
 		
 		var bounds = this.getLabelBounds(state);
@@ -930,7 +931,19 @@ mxCellRenderer.prototype.isTextShapeInvalid = function(state, shape)
 {
 	function check(property, stylename, defaultValue)
 	{
-		return shape[property] != (state.style[stylename] || defaultValue);
+		// Workaround for spacing added to directional spacing
+		if (stylename == 'spacingTop' || stylename == 'spacingRight' ||
+			stylename == 'spacingBottom' || stylename == 'spacingLeft')
+		{
+			result = parseFloat(shape[property]) - parseFloat(shape.spacing) !=
+				(state.style[stylename] || defaultValue);
+		}
+		else
+		{
+			result = shape[property] != (state.style[stylename] || defaultValue);
+		}
+		
+		return result;
 	};
 
 	return check('fontStyle', mxConstants.STYLE_FONTSTYLE, mxConstants.DEFAULT_FONTSTYLE) ||
@@ -940,10 +953,10 @@ mxCellRenderer.prototype.isTextShapeInvalid = function(state, shape)
 		check('align', mxConstants.STYLE_ALIGN, '') ||
 		check('valign', mxConstants.STYLE_VERTICAL_ALIGN, '') ||
 		check('spacing', mxConstants.STYLE_SPACING, 2) ||
-		check('spacingTop', mxConstants.STYLE_SPACING_TOP, 2) ||
-		check('spacingRight', mxConstants.STYLE_SPACING_RIGHT, 2) ||
-		check('spacingBottom', mxConstants.STYLE_SPACING_BOTTOM, 2) ||
-		check('spacingLeft', mxConstants.STYLE_SPACING_LEFT, 2) ||
+		check('spacingTop', mxConstants.STYLE_SPACING_TOP, 0) ||
+		check('spacingRight', mxConstants.STYLE_SPACING_RIGHT, 0) ||
+		check('spacingBottom', mxConstants.STYLE_SPACING_BOTTOM, 0) ||
+		check('spacingLeft', mxConstants.STYLE_SPACING_LEFT, 0) ||
 		check('horizontal', mxConstants.STYLE_HORIZONTAL, true) ||
 		check('background', mxConstants.STYLE_LABEL_BACKGROUNDCOLOR) ||
 		check('border', mxConstants.STYLE_LABEL_BORDERCOLOR) ||
@@ -1456,9 +1469,7 @@ mxCellRenderer.prototype.redrawShape = function(state, force, rendering)
 		
 		// Redraws the cell if required, ignores changes to bounds if points are
 		// defined as the bounds are updated for the given points inside the shape
-		if (force || state.shape.bounds == null || state.shape.scale != state.view.scale ||
-			(state.absolutePoints == null && !state.shape.bounds.equals(state)) ||
-			(state.absolutePoints != null && !mxUtils.equalPoints(state.shape.points, state.absolutePoints)))
+		if (force || this.isShapeInvalid(state, state.shape))
 		{
 			if (state.absolutePoints != null)
 			{
@@ -1487,6 +1498,18 @@ mxCellRenderer.prototype.redrawShape = function(state, force, rendering)
 	}
 
 	return shapeChanged;
+};
+
+/**
+ * Function: isShapeInvalid
+ * 
+ * Returns true if the given shape must be repainted.
+ */
+mxCellRenderer.prototype.isShapeInvalid = function(state, shape)
+{
+	return shape.bounds == null || shape.scale != state.view.scale ||
+		(state.absolutePoints == null && !shape.bounds.equals(state)) ||
+		(state.absolutePoints != null && !mxUtils.equalPoints(shape.points, state.absolutePoints))
 };
 
 /**

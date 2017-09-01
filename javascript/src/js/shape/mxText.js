@@ -65,8 +65,8 @@ function mxText(value, bounds, align, valign, color,
 	this.value = value;
 	this.bounds = bounds;
 	this.color = (color != null) ? color : 'black';
-	this.align = (align != null) ? align : '';
-	this.valign = (valign != null) ? valign : '';
+	this.align = (align != null) ? align : mxConstants.ALIGN_CENTER;
+	this.valign = (valign != null) ? valign : mxConstants.ALIGN_MIDDLE;
 	this.family = (family != null) ? family : mxConstants.DEFAULT_FONTFAMILY;
 	this.size = (size != null) ? size : mxConstants.DEFAULT_FONTSIZE;
 	this.fontStyle = (fontStyle != null) ? fontStyle : mxConstants.DEFAULT_FONTSTYLE;
@@ -239,16 +239,17 @@ mxText.prototype.paint = function(c, update)
 	
 	this.updateTransform(c, x, y, w, h);
 	this.configureCanvas(c, x, y, w, h);
-	
+
+	var unscaledWidth = (this.state != null) ? this.state.unscaledWidth : null;
+
 	if (update)
 	{
-		var unscaledWidth = (this.state != null) ? this.state.unscaledWidth : null;
-		
-		if (this.node.firstChild != null && this.lastUnscaledWidth != unscaledWidth)
+		if (this.node.firstChild != null && (unscaledWidth == null ||
+			this.lastUnscaledWidth != unscaledWidth))
 		{
 			c.invalidateCachedOffsetSize(this.node);
 		}
-		
+
 		c.updateText(x, y, w, h, this.align, this.valign, this.wrap, this.overflow,
 				this.clipped, this.getTextRotation(), this.node);
 	}
@@ -292,7 +293,7 @@ mxText.prototype.paint = function(c, update)
 	}
 	
 	// Needs to invalidate the cached offset widths if the geometry changes
-	this.lastUnscaledWidth = (this.state != null) ? this.state.unscaledWidth : null;
+	this.lastUnscaledWidth = unscaledWidth;
 };
 
 /**
@@ -323,7 +324,7 @@ mxText.prototype.redraw = function()
 		else
 		{
 			var canvas = this.createCanvas();
-			
+
 			if (canvas != null && canvas.updateText != null &&
 				canvas.invalidateCachedOffsetSize != null)
 			{
@@ -363,16 +364,16 @@ mxText.prototype.resetStyles = function()
 	mxShape.prototype.resetStyles.apply(this, arguments);
 	
 	this.color = 'black';
-	this.align = '';
-	this.valign = '';
+	this.align = mxConstants.ALIGN_CENTER;
+	this.valign = mxConstants.ALIGN_MIDDLE;
 	this.family = mxConstants.DEFAULT_FONTFAMILY;
 	this.size = mxConstants.DEFAULT_FONTSIZE;
 	this.fontStyle = mxConstants.DEFAULT_FONTSTYLE;
 	this.spacing = 2;
-	this.spacingTop = 0;
-	this.spacingRight = 0;
-	this.spacingBottom = 0;
-	this.spacingLeft = 0;
+	this.spacingTop = 2;
+	this.spacingRight = 2;
+	this.spacingBottom = 2;
+	this.spacingLeft = 2;
 	this.horizontal = true;
 	delete this.background;
 	delete this.border;
@@ -391,6 +392,7 @@ mxText.prototype.resetStyles = function()
  */
 mxText.prototype.apply = function(state)
 {
+	var old = this.spacing;
 	mxShape.prototype.apply.apply(this, arguments);
 	
 	if (this.style != null)
@@ -401,15 +403,16 @@ mxText.prototype.apply = function(state)
 		this.color = mxUtils.getValue(this.style, mxConstants.STYLE_FONTCOLOR, this.color);
 		this.align = mxUtils.getValue(this.style, mxConstants.STYLE_ALIGN, this.align);
 		this.valign = mxUtils.getValue(this.style, mxConstants.STYLE_VERTICAL_ALIGN, this.valign);
-		this.spacing = mxUtils.getValue(this.style, mxConstants.STYLE_SPACING, this.spacing);
-		this.spacingTop = mxUtils.getValue(this.style, mxConstants.STYLE_SPACING_TOP, this.spacingTop) + this.spacing;
-		this.spacingRight = mxUtils.getValue(this.style, mxConstants.STYLE_SPACING_RIGHT, this.spacingRight) + this.spacing;
-		this.spacingBottom = mxUtils.getValue(this.style, mxConstants.STYLE_SPACING_BOTTOM, this.spacingBottom) + this.spacing;
-		this.spacingLeft = mxUtils.getValue(this.style, mxConstants.STYLE_SPACING_LEFT, this.spacingLeft) + this.spacing;
+		this.spacing = parseInt(mxUtils.getValue(this.style, mxConstants.STYLE_SPACING, this.spacing));
+		this.spacingTop = parseInt(mxUtils.getValue(this.style, mxConstants.STYLE_SPACING_TOP, this.spacingTop - old)) + this.spacing;
+		this.spacingRight = parseInt(mxUtils.getValue(this.style, mxConstants.STYLE_SPACING_RIGHT, this.spacingRight - old)) + this.spacing;
+		this.spacingBottom = parseInt(mxUtils.getValue(this.style, mxConstants.STYLE_SPACING_BOTTOM, this.spacingBottom - old)) + this.spacing;
+		this.spacingLeft = parseInt(mxUtils.getValue(this.style, mxConstants.STYLE_SPACING_LEFT, this.spacingLeft - old)) + this.spacing;
 		this.horizontal = mxUtils.getValue(this.style, mxConstants.STYLE_HORIZONTAL, this.horizontal);
 		this.background = mxUtils.getValue(this.style, mxConstants.STYLE_LABEL_BACKGROUNDCOLOR, this.background);
 		this.border = mxUtils.getValue(this.style, mxConstants.STYLE_LABEL_BORDERCOLOR, this.border);
 		this.textDirection = mxUtils.getValue(this.style, mxConstants.STYLE_TEXT_DIRECTION, mxConstants.DEFAULT_TEXT_DIRECTION);
+		this.opacity = mxUtils.getValue(this.style, mxConstants.STYLE_TEXT_OPACITY, 100);
 		this.updateMargin();
 	}
 	
@@ -474,19 +477,17 @@ mxText.prototype.updateBoundingBox = function()
 					if (typeof(this.value) == 'string' && mxUtils.trim(this.value) == 0)
 					{
 						this.boundingBox = null;
-						
-						return;
 					}
-					
-					if (b.width == 0 && b.height == 0)
+					else if (b.width == 0 && b.height == 0)
 					{
 						this.boundingBox = null;
-						
-						return;
+					}
+					else
+					{
+						this.boundingBox = new mxRectangle(b.x, b.y, b.width, b.height);
 					}
 					
-					this.boundingBox = new mxRectangle(b.x, b.y, b.width, b.height);
-					rot = 0;
+					return;
 				}
 				catch (e)
 				{
@@ -572,37 +573,36 @@ mxText.prototype.updateBoundingBox = function()
 		}
 
 		if (ow != null && oh != null)
-		{
-			var x0 = this.bounds.x + this.margin.x * ow;
-			var y0 = this.bounds.y + this.margin.y * oh;
-			
-			this.boundingBox = new mxRectangle(x0, y0, ow, oh);
+		{	
+			this.boundingBox = new mxRectangle(this.bounds.x,
+				this.bounds.y, ow, oh);
 		}
-	}
-	else
-	{
-		this.boundingBox.x += this.margin.x * this.boundingBox.width;
-		this.boundingBox.y += this.margin.y * this.boundingBox.height;		
 	}
 
 	if (this.boundingBox != null)
 	{
 		if (rot != 0)
 		{
+			// Accounts for pre-rotated x and y
+			var bbox = mxUtils.getBoundingBox(new mxRectangle(
+				this.margin.x * this.boundingBox.width,
+				this.margin.y * this.boundingBox.height,
+				this.boundingBox.width, this.boundingBox.height),
+				rot, new mxPoint(0, 0));
+			
 			this.unrotatedBoundingBox = mxRectangle.fromRectangle(this.boundingBox);
-			var bbox = mxUtils.getBoundingBox(this.boundingBox, rot);
+			this.unrotatedBoundingBox.x += this.margin.x * this.unrotatedBoundingBox.width;
+			this.unrotatedBoundingBox.y += this.margin.y * this.unrotatedBoundingBox.height;
 			
-			this.boundingBox.x = bbox.x;
-			this.boundingBox.y = bbox.y;
-			
-			if (!mxClient.IS_QUIRKS)
-			{
-				this.boundingBox.width = bbox.width;
-				this.boundingBox.height = bbox.height;
-			}
+			this.boundingBox.x += bbox.x;
+			this.boundingBox.y += bbox.y;
+			this.boundingBox.width = bbox.width;
+			this.boundingBox.height = bbox.height;
 		}
 		else
 		{
+			this.boundingBox.x += this.margin.x * this.boundingBox.width;
+			this.boundingBox.y += this.margin.y * this.boundingBox.height;
 			this.unrotatedBoundingBox = null;
 		}
 	}

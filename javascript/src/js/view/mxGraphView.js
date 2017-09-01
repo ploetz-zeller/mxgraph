@@ -161,6 +161,13 @@ mxGraphView.prototype.scale = 1;
 mxGraphView.prototype.translate = null;
 
 /**
+ * Variable: states
+ * 
+ * <mxDictionary> that maps from cell IDs to <mxCellStates>.
+ */
+mxGraphView.prototype.states = null;
+
+/**
  * Variable: updateStyle
  * 
  * Specifies if the style should be updated in each validation step. If this
@@ -959,6 +966,9 @@ mxGraphView.prototype.validateCellState = function(cell, recurse)
 				if (cell != this.currentRoot && !state.invalid)
 				{
 					this.graph.cellRenderer.redraw(state, false, this.isRendering());
+
+					// Handles changes to invertex paintbounds after update of rendering shape
+					state.updateCachedBounds();
 				}
 			}
 
@@ -1660,10 +1670,50 @@ mxGraphView.prototype.getPerimeterPoint = function(terminal, next, orthogonal, b
 		if (perimeter != null && next != null)
 		{
 			var bounds = this.getPerimeterBounds(terminal, border);
-			
+
 			if (bounds.width > 0 || bounds.height > 0)
 			{
-				point = perimeter(bounds, terminal, next, orthogonal);
+				point = new mxPoint(next.x, next.y);
+				var flipH = false;
+				var flipV = false;	
+				
+				if (this.graph.model.isVertex(terminal.cell))
+				{
+					flipH = mxUtils.getValue(terminal.style, mxConstants.STYLE_FLIPH, 0) == 1;
+					flipV = mxUtils.getValue(terminal.style, mxConstants.STYLE_FLIPV, 0) == 1;	
+	
+					// Legacy support for stencilFlipH/V
+					if (terminal.shape != null && terminal.shape.stencil != null)
+					{
+						flipH = (mxUtils.getValue(terminal.style, 'stencilFlipH', 0) == 1) || flipH;
+						flipV = (mxUtils.getValue(terminal.style, 'stencilFlipV', 0) == 1) || flipV;
+					}
+	
+					if (flipH)
+					{
+						point.x = 2 * bounds.getCenterX() - point.x;
+					}
+					
+					if (flipV)
+					{
+						point.y = 2 * bounds.getCenterY() - point.y;
+					}
+				}
+				
+				point = perimeter(bounds, terminal, point, orthogonal);
+
+				if (point != null)
+				{
+					if (flipH)
+					{
+						point.x = 2 * bounds.getCenterX() - point.x;
+					}
+					
+					if (flipV)
+					{
+						point.y = 2 * bounds.getCenterY() - point.y;
+					}
+				}
 			}
 		}
 		
@@ -2636,6 +2686,7 @@ mxGraphView.prototype.createHtml = function()
 	if (container != null)
 	{
 		this.canvas = this.createHtmlPane('100%', '100%');
+		this.canvas.style.overflow = 'hidden';
 	
 		// Uses minimal size for inner DIVs on Canvas. This is required
 		// for correct event processing in IE. If we have an overlapping
@@ -2742,6 +2793,7 @@ mxGraphView.prototype.createVml = function()
 		var width = container.offsetWidth;
 		var height = container.offsetHeight;
 		this.canvas = this.createVmlPane(width, height);
+		this.canvas.style.overflow = 'hidden';
 		
 		this.backgroundPane = this.createVmlPane(width, height);
 		this.drawPane = this.createVmlPane(width, height);
@@ -2772,10 +2824,10 @@ mxGraphView.prototype.createVmlPane = function(width, height)
 	pane.style.left = '0px';
 	pane.style.top = '0px';
 
-	pane.style.width = width+'px';
-	pane.style.height = height+'px';
+	pane.style.width = width + 'px';
+	pane.style.height = height + 'px';
 
-	pane.setAttribute('coordsize', width+','+height);
+	pane.setAttribute('coordsize', width + ',' + height);
 	pane.setAttribute('coordorigin', '0,0');
 	
 	return pane;
@@ -2813,6 +2865,12 @@ mxGraphView.prototype.createSvg = function()
 	// in order for the container DIV to not show scrollbars.
 	root.style.display = 'block';
 	root.appendChild(this.canvas);
+	
+	// Workaround for scrollbars in IE11 and below
+	if (mxClient.IS_IE || mxClient.IS_IE11)
+	{
+		root.style.overflow = 'hidden';
+	}
 
 	if (container != null)
 	{

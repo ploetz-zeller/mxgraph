@@ -1,3 +1,103 @@
+28-AUG-2017: 3.7.5
+
+- Adds line jumps in grapheditor example
+- Adds mxCellRenderer.isShapeInvalid hook
+- Adds mxConstants.STYLE_ABSOLUTE_ARCSIZE for rectangles
+- Calls updateCachedBounds in mxGraphView.validateCellState
+- Adds mxShape.getLabelMargins, exclude argument in addPoints
+- Adds mxUtils.getDirectedBounds and getPerimeterPoint
+- Handles flipH/-V in mxGraphView.getPerimeterPoint
+- Fixes pen events for Chrome on Windows
+- Adds fixDash style, mxEvent.isPenEvent
+- Fixes possible NPE in mxUtils.ltrim and rtrim
+- mxUtils.getScrollOrigin ignores ancestors by default
+- Adds optional arguments in mxUtils.getScrollOrigin
+- Adds mxGraph.isTransparentClickEvent hook
+
+27-JUN-2017: 3.7.4
+
+- Fixes mxXmlUtils.parseXml null return value
+
+27-JUN-2017: 3.7.3
+
+- Fixes horizontal/vertical flip for perimeter projections
+- Changes mxConstants.PAGE_FORMAT_A4_PORTRAIT/LANDSCAPE width/height to 827
+- Disables external XML entities in all backends
+- Fixes ignored underline in mxUtils.getFont
+- Resets tooltip content in mxTooltipHandler.hideTooltip
+- Fixes custom handle visible during resize with strict HTML
+- Fixes custom handle text flow preview with strict HTML
+- Fixes reset of inactive mxHandles in mxVertexHandler.reset
+- Adds mxConstants.STYLE_SOURCE/TARGET_PORT_CONSTRAINT styles
+- Fixes cache invalidation for custom handle reset
+- Fixes submenu showing with negative x-coordinate
+- Adds optional inverse argument for mxGraph.traverse
+- Fixes possible String type for spacing in mxText
+- Adds mxForceIncludes global config variable
+- Fixes mxCellHighlight for scaled arrows
+- Removes fix for cloned start/end arrow when splitting edge
+- Fixes touch events in Chrome for hiding modal dialogs
+
+12-APR-2017: 3.7.2
+
+- Adds checks for swimlane rendering boundary cases
+- Fixes cloned start/end arrow in mxGraph.splitEdge
+- Removes mxShape.arrowStrokewidth, fixes mxCellHighlight for arrows
+- Adds automatic NPM release
+- Adds optional type argument in mxForm.addText
+- Fixes selection of removed parents in grapheditor
+- Fixes Graph.distributeCells for child cells in groups
+- Fixes Graph.encodeCells for children of selected parents
+- Fixes possible NPE in mxUtils.getOffset/getScrollOrigin
+- Fixes dashed and strokewidth tag in stencils for Java
+- Fixes markup for same window for IE in mxPrintPreview
+
+01-MAR-2017: 3.7.1
+
+- Uses semantic versioning
+- Fixes mxUtils.getOffset and getScrollOrigin for fixed elements
+- Adds handling for general case in mxGraph.getCellValidationError
+- Ignores connected terminals in mxGraph.getBoundingBoxFromGeometry
+- Adds mxCellEditor.prepareTextarea for linefeeds in FF
+- Fixes linefeeds in mxUtils.extractTextWithWhitespace
+- Adds mxSvgCanvas2D.imageOffset option
+- Refactors link handling in grapheditor
+- Fixes extendParent order for mxGraph.groupCells
+
+29-JAN-2017: 3.7.0.1
+
+- Fixes mxXmlRequest.simulate in Webkit
+- Adds HTML_SCALE, HTML_UNIT in mxGraphicsCanvas2D
+- Fixes repaint in mxConstraintHandler
+
+16-JAN-2017: 3.7.0.0
+
+- mxXmlRequest.simulate no longer adds form to DOM in Webkit
+- Adds workaround for repaint issues in mxWindow
+- Adds mxGraphHandler.consumeMouseEvent hook
+- Removes word wrap in mxLog for performance reasons
+- Fixes mxClient.IS_POINTER for Chrome on Mac
+- Fixes bounding box for rotated text
+- Fixes default alignment in mxText.resetStyles
+- Uses UTF-8 charset in mxClient.link
+- Adds fallback for missing function in mxCell.hasAttribute
+- Fixes trailing page break after appendices in mxPrintPreview
+- Resets default parent if root changes in mxGraph.processChange
+- Fixes version format in package.json in mxgraph-js repo
+- Fixes initial scrollbars for hidden content in grapheditor
+- Adds mxRubberband.isActive, execute
+- Adds mxPrintPreview.appendGraph, addPageBreak, closeDocument
+- Adds optional name for mxConnectionConstraint
+- Fixes handling of terminal points in mxGraph.getBoundingBoxFromGeometry
+- Fixes vertical-/horizontalPageBreaks in mxGraph instance
+- Uses minimum of 1 page for empty graphs with preferPageSize
+- Adds crisp rendering, fixes scrollbars in IE for page breaks
+- Fixes scaled return value in mxGraph.getPreferredPageSize
+- Adds snapToPoint custom attribute in grapheditor
+- Adds mxCell.hasAttribute, scope for placeholder in grapheditor
+- Adds Alt+(Shift+)Tab for select parent/child in grapheditor
+- Resets undo history after editing in mxCellEditor
+
 07-SEP-2016: 3.6.0.0
 
 - Adds Alt+Shift+Cursor to connect and clone in grapheditor

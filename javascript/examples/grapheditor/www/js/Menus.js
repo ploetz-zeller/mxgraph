@@ -194,9 +194,20 @@ Menus.prototype.init = function()
 	})));
 	this.put('layout', new Menu(mxUtils.bind(this, function(menu, parent)
 	{
+		var promptSpacing = mxUtils.bind(this, function(defaultValue, fn)
+		{
+			var dlg = new FilenameDialog(this.editorUi, defaultValue, mxResources.get('apply'), function(newValue)
+			{
+				fn(parseFloat(newValue));
+			}, mxResources.get('spacing'));
+			this.editorUi.showDialog(dlg.container, 300, 80, true, true);
+			dlg.init();
+		});
+		
 		menu.addItem(mxResources.get('horizontalFlow'), null, mxUtils.bind(this, function()
 		{
 			var layout = new mxHierarchicalLayout(graph, mxConstants.DIRECTION_WEST);
+			
     		this.editorUi.executeLayout(function()
     		{
     			var selectionCells = graph.getSelectionCells();
@@ -206,6 +217,7 @@ Menus.prototype.init = function()
 		menu.addItem(mxResources.get('verticalFlow'), null, mxUtils.bind(this, function()
 		{
 			var layout = new mxHierarchicalLayout(graph, mxConstants.DIRECTION_NORTH);
+			
     		this.editorUi.executeLayout(function()
     		{
     			var selectionCells = graph.getSelectionCells();
@@ -240,11 +252,16 @@ Menus.prototype.init = function()
 				var layout = new mxCompactTreeLayout(graph, true);
 				layout.edgeRouting = false;
 				layout.levelDistance = 30;
-	
-				this.editorUi.executeLayout(function()
-	    		{
-					layout.execute(graph.getDefaultParent(), tmp);
-	    		}, true);
+				
+				promptSpacing(layout.levelDistance, mxUtils.bind(this, function(newValue)
+				{
+					layout.levelDistance = newValue;
+					
+					this.editorUi.executeLayout(function()
+		    		{
+						layout.execute(graph.getDefaultParent(), tmp);
+		    		}, true);
+				}));
 			}
 		}), parent);
 		menu.addItem(mxResources.get('verticalTree'), null, mxUtils.bind(this, function()
@@ -271,15 +288,19 @@ Menus.prototype.init = function()
 			
 			if (tmp != null)
 			{
-
 				var layout = new mxCompactTreeLayout(graph, false);
 				layout.edgeRouting = false;
 				layout.levelDistance = 30;
 				
-				this.editorUi.executeLayout(function()
-	    		{
-					layout.execute(graph.getDefaultParent(), tmp);
-	    		}, true);
+				promptSpacing(layout.levelDistance, mxUtils.bind(this, function(newValue)
+				{
+					layout.levelDistance = newValue;
+					
+					this.editorUi.executeLayout(function()
+		    		{
+						layout.execute(graph.getDefaultParent(), tmp);
+		    		}, true);
+				}));
 			}
 		}), parent);
 		menu.addItem(mxResources.get('radialTree'), null, mxUtils.bind(this, function()
@@ -307,50 +328,61 @@ Menus.prototype.init = function()
 			if (tmp != null)
 			{
 				var layout = new mxRadialTreeLayout(graph, false);
-				layout.levelDistance = 60;
+				layout.levelDistance = 80;
 				layout.autoRadius = true;
 				
-	    		this.editorUi.executeLayout(function()
-	    		{
-	    			layout.execute(graph.getDefaultParent(), tmp);
-	    			
-	    			if (!graph.isSelectionEmpty())
-	    			{
-		    			tmp = graph.getModel().getParent(tmp);
+				promptSpacing(layout.levelDistance, mxUtils.bind(this, function(newValue)
+				{
+					layout.levelDistance = newValue;
+					
+					this.editorUi.executeLayout(function()
+		    		{
+		    			layout.execute(graph.getDefaultParent(), tmp);
 		    			
-		    			if (graph.getModel().isVertex(tmp))
+		    			if (!graph.isSelectionEmpty())
 		    			{
-		    				graph.updateGroupBounds([tmp], graph.gridSize * 2, true);
+			    			tmp = graph.getModel().getParent(tmp);
+			    			
+			    			if (graph.getModel().isVertex(tmp))
+			    			{
+			    				graph.updateGroupBounds([tmp], graph.gridSize * 2, true);
+			    			}
 		    			}
-	    			}
-	    		}, true);
+		    		}, true);
+				}));
 			}
 		}), parent);
 		menu.addSeparator(parent);
 		menu.addItem(mxResources.get('organic'), null, mxUtils.bind(this, function()
 		{
 			var layout = new mxFastOrganicLayout(graph);
-
-    		this.editorUi.executeLayout(function()
-    		{
-    			var tmp = graph.getSelectionCell();
-    			
-    			if (tmp == null || graph.getModel().getChildCount(tmp) == 0)
-    			{
-    				tmp = graph.getDefaultParent();
-    			}
-    			
-    			layout.execute(tmp);
-    			
-    			if (graph.getModel().isVertex(tmp))
-    			{
-    				graph.updateGroupBounds([tmp], graph.gridSize * 2, true);
-    			}
-    		}, true);
+			
+			promptSpacing(layout.forceConstant, mxUtils.bind(this, function(newValue)
+			{
+				layout.forceConstant = newValue;
+				
+	    		this.editorUi.executeLayout(function()
+	    		{
+	    			var tmp = graph.getSelectionCell();
+	    			
+	    			if (tmp == null || graph.getModel().getChildCount(tmp) == 0)
+	    			{
+	    				tmp = graph.getDefaultParent();
+	    			}
+	    			
+	    			layout.execute(tmp);
+	    			
+	    			if (graph.getModel().isVertex(tmp))
+	    			{
+	    				graph.updateGroupBounds([tmp], graph.gridSize * 2, true);
+	    			}
+	    		}, true);
+			}));
 		}), parent);
 		menu.addItem(mxResources.get('circle'), null, mxUtils.bind(this, function()
 		{
 			var layout = new mxCircleLayout(graph);
+			
     		this.editorUi.executeLayout(function()
     		{
     			var tmp = graph.getSelectionCell();
@@ -432,8 +464,8 @@ Menus.prototype.init = function()
 	this.put('edit', new Menu(mxUtils.bind(this, function(menu, parent)
 	{
 		this.addMenuItems(menu, ['undo', 'redo', '-', 'cut', 'copy', 'paste', 'delete', '-', 'duplicate', '-',
-		                         'editData', 'editTooltip', 'editStyle', '-', 'editLink', 'openLink', '-', 'selectVertices',
-		                         'selectEdges', 'selectAll', 'selectNone', '-', 'lockUnlock']);
+		                         'editData', 'editTooltip', 'editStyle', '-', 'edit', '-', 'editLink', 'openLink', '-',
+		                         'selectVertices', 'selectEdges', 'selectAll', 'selectNone', '-', 'lockUnlock']);
 	})));
 	this.put('extras', new Menu(mxUtils.bind(this, function(menu, parent)
 	{
@@ -960,7 +992,7 @@ Menus.prototype.createPopupMenu = function(menu, cell, evt)
 
 	}
 
-	if (graph.getSelectionCount() > 0)
+	if (!graph.isSelectionEmpty())
 	{
 		if (graph.getSelectionCount() == 1)
 		{
@@ -971,13 +1003,11 @@ Menus.prototype.createPopupMenu = function(menu, cell, evt)
 		
 		cell = graph.getSelectionCell();
 		var state = graph.view.getState(cell);
-		
+
 		if (state != null)
 		{
-			if (graph.getSelectionCount() == 1)
-			{
-				this.addMenuItems(menu, ['toFront', 'toBack', '-'], null, evt);
-			}
+			var hasWaypoints = false;
+			this.addMenuItems(menu, ['toFront', 'toBack', '-'], null, evt);
 
 			if (graph.getModel().isEdge(cell) && mxUtils.getValue(state.style, mxConstants.STYLE_EDGE, null) != 'entityRelationEdgeStyle' &&
 				mxUtils.getValue(state.style, mxConstants.STYLE_SHAPE, null) != 'arrow')
@@ -1002,13 +1032,15 @@ Menus.prototype.createPopupMenu = function(menu, cell, evt)
 	
 				// Adds reset waypoints option if waypoints exist
 				var geo = graph.getModel().getGeometry(cell);
-				
-				if (geo != null && geo.points != null && geo.points.length > 0)
-				{
-					this.addMenuItems(menu, ['clearWaypoints'], null, evt);	
-				}
+				hasWaypoints = geo != null && geo.points != null && geo.points.length > 0;
 			}
 
+			if (graph.getSelectionCount() == 1 && (hasWaypoints || (graph.getModel().isVertex(cell) &&
+				graph.getModel().getEdgeCount(cell) > 0)))
+			{
+				this.addMenuItems(menu, ['clearWaypoints'], null, evt);
+			}
+			
 			if (graph.getSelectionCount() > 1)	
 			{
 				menu.addSeparator();
@@ -1024,7 +1056,7 @@ Menus.prototype.createPopupMenu = function(menu, cell, evt)
 			if (graph.getSelectionCount() == 1)
 			{
 				menu.addSeparator();
-				this.addMenuItems(menu, ['editData', 'editLink'], null, evt);
+				this.addMenuItems(menu, ['edit', '-', 'editData', 'editLink'], null, evt);
 
 				// Shows edit image action if there is an image in the style
 				if (graph.getModel().isVertex(cell) && mxUtils.getValue(state.style, mxConstants.STYLE_IMAGE, null) != null)
@@ -1051,40 +1083,52 @@ Menus.prototype.createMenubar = function(container)
 	
 	for (var i = 0; i < menus.length; i++)
 	{
-		(function(menu)
+		(mxUtils.bind(this, function(menu)
 		{
-			var elt = menubar.addMenu(mxResources.get(menus[i]), menu.funct);
-			
-			if (elt != null)
+			var elt = menubar.addMenu(mxResources.get(menus[i]), mxUtils.bind(this, function()
 			{
-				menu.addListener('stateChanged', function()
-				{
-					elt.enabled = menu.enabled;
-					
-					if (!menu.enabled)
-					{
-						elt.className = 'geItem mxDisabled';
-						
-						if (document.documentMode == 8)
-						{
-							elt.style.color = '#c3c3c3';
-						}
-					}
-					else
-					{
-						elt.className = 'geItem';
-						
-						if (document.documentMode == 8)
-						{
-							elt.style.color = '';
-						}
-					}
-				});
-			}
-		})(this.get(menus[i]));
+				// Allows extensions of menu.funct
+				menu.funct.apply(this, arguments);
+			}));
+			
+			this.menuCreated(menu, elt);
+		}))(this.get(menus[i]));
 	}
 
 	return menubar;
+};
+
+/**
+ * Creates the keyboard event handler for the current graph and history.
+ */
+Menus.prototype.menuCreated = function(menu, elt)
+{
+	if (elt != null)
+	{
+		menu.addListener('stateChanged', function()
+		{
+			elt.enabled = menu.enabled;
+			
+			if (!menu.enabled)
+			{
+				elt.className = 'geItem mxDisabled';
+				
+				if (document.documentMode == 8)
+				{
+					elt.style.color = '#c3c3c3';
+				}
+			}
+			else
+			{
+				elt.className = 'geItem';
+				
+				if (document.documentMode == 8)
+				{
+					elt.style.color = '';
+				}
+			}
+		});
+	}
 };
 
 /**

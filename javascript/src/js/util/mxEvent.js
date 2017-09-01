@@ -451,6 +451,18 @@ var mxEvent =
 	},
 
 	/**
+	 * Function: isPenEvent
+	 * 
+	 * Returns true if the event was generated using a pen (not a touch device or mouse).
+	 */
+	isPenEvent: function(evt)
+	{
+		return (evt.pointerType != null) ? (evt.pointerType == 'pen' || evt.pointerType ===
+			evt.MSPOINTER_TYPE_PEN) : ((evt.mozInputSource != null) ?
+					evt.mozInputSource == 2 : evt.type.indexOf('pen') == 0);
+	},
+
+	/**
 	 * Function: isMultiTouchEvent
 	 * 
 	 * Returns true if the event was generated using a touch device (not a pen or mouse).
@@ -1369,13 +1381,6 @@ var mxEvent =
 	 * Specifies the event name for escape.
 	 */
 	ESCAPE: 'escape',
-
-	/**
-	 * Variable: CLICK
-	 *
-	 * Specifies the event name for click.
-	 */
-	CLICK: 'click',
 
 	/**
 	 * Variable: DOUBLE_CLICK

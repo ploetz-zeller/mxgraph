@@ -35,10 +35,7 @@ Format.prototype.init = function()
 	graph.getSelectionModel().addListener(mxEvent.CHANGE, this.update);
 	graph.addListener(mxEvent.EDITING_STARTED, this.update);
 	graph.addListener(mxEvent.EDITING_STOPPED, this.update);
-	graph.getModel().addListener(mxEvent.CHANGE, mxUtils.bind(this, function()
-	{
-		this.clearSelectionState();
-	}));
+	graph.getModel().addListener(mxEvent.CHANGE, this.update);
 	graph.addListener(mxEvent.ROOT, mxUtils.bind(this, function()
 	{
 		this.refresh();
@@ -91,7 +88,7 @@ Format.prototype.initSelectionState = function()
 {
 	return {vertices: [], edges: [], x: null, y: null, width: null, height: null, style: {},
 		containsImage: false, containsLabel: false, fill: true, glass: true, rounded: true,
-		comic: true, autoSize: false, image: true, shadow: true};
+		comic: true, autoSize: false, image: true, shadow: true, lineJumps: true};
 };
 
 /**
@@ -177,6 +174,7 @@ Format.prototype.updateSelectionStateForCell = function(result, cell, cells)
 		result.autoSize = result.autoSize || this.isAutoSizeState(state);
 		result.glass = result.glass && this.isGlassState(state);
 		result.rounded = result.rounded && this.isRoundedState(state);
+		result.lineJumps = result.lineJumps && this.isLineJumpState(state);
 		result.comic = result.comic && this.isComicState(state);
 		result.image = result.image && this.isImageState(state);
 		result.shadow = result.shadow && this.isShadowState(state);
@@ -211,6 +209,7 @@ Format.prototype.isFillState = function(state)
 {
 	return state.view.graph.model.isVertex(state.cell) ||
 		mxUtils.getValue(state.style, mxConstants.STYLE_SHAPE, null) == 'arrow' ||
+		mxUtils.getValue(state.style, mxConstants.STYLE_SHAPE, null) == 'filledEdge' ||
 		mxUtils.getValue(state.style, mxConstants.STYLE_SHAPE, null) == 'flexArrow';
 };
 
@@ -237,8 +236,18 @@ Format.prototype.isRoundedState = function(state)
 			shape == 'parallelogram' || shape == 'swimlane' || shape == 'triangle' || shape == 'trapezoid' ||
 			shape == 'ext' || shape == 'step' || shape == 'tee' || shape == 'process' || shape == 'link' ||
 			shape == 'rhombus' || shape == 'offPageConnector' || shape == 'loopLimit' || shape == 'hexagon' ||
-			shape == 'manualInput' || shape == 'curlyBracket' || shape == 'singleArrow' ||
+			shape == 'manualInput' || shape == 'curlyBracket' || shape == 'singleArrow' || shape == 'callout' ||
 			shape == 'doubleArrow' || shape == 'flexArrow' || shape == 'card' || shape == 'umlLifeline');
+};
+
+/**
+ * Returns information about the current selection.
+ */
+Format.prototype.isLineJumpState = function(state)
+{
+	var shape = mxUtils.getValue(state.style, mxConstants.STYLE_SHAPE, null);
+	
+	return shape == 'connector' || shape == 'filledEdge';
 };
 
 /**
@@ -251,8 +260,8 @@ Format.prototype.isComicState = function(state)
 	return mxUtils.indexOf(['label', 'rectangle', 'internalStorage', 'corner', 'parallelogram', 'note', 'collate',
 	                        'swimlane', 'triangle', 'trapezoid', 'ext', 'step', 'tee', 'process', 'link', 'rhombus',
 	                        'offPageConnector', 'loopLimit', 'hexagon', 'manualInput', 'singleArrow', 'doubleArrow',
-	                        'flexArrow', 'card', 'umlLifeline', 'connector', 'folder', 'component', 'sortShape',
-	                        'cross', 'umlFrame', 'cube', 'isoCube', 'isoRectangle'], shape) >= 0;
+	                        'flexArrow', 'filledEdge', 'card', 'umlLifeline', 'connector', 'folder', 'component', 'sortShape',
+	                        'cross', 'umlFrame', 'cube', 'isoCube', 'isoRectangle', 'partialRectangle'], shape) >= 0;
 };
 
 /**
@@ -1057,21 +1066,26 @@ BaseFormatPanel.prototype.createColorOption = function(label, getColorFn, setCol
 
 	mxEvent.addListener(div, 'click', function(evt)
 	{
-		// Toggles checkbox state for click on label
-		if (mxEvent.getSource(evt) != cb)
-		{
-			cb.checked = !cb.checked;
-		}
-
-		// Overrides default value with current value to make it easier
-		// to restore previous value if the checkbox is clicked twice
-		if (!cb.checked && value != null && value != mxConstants.NONE &&
-			defaultColor != mxConstants.NONE)
-		{
-			defaultColor = value;
-		}
+		var source = mxEvent.getSource(evt);
 		
-		apply((cb.checked) ? defaultColor : mxConstants.NONE);
+		if (source == cb || source.nodeName != 'INPUT')
+		{		
+			// Toggles checkbox state for click on label
+			if (source != cb)
+			{
+				cb.checked = !cb.checked;
+			}
+	
+			// Overrides default value with current value to make it easier
+			// to restore previous value if the checkbox is clicked twice
+			if (!cb.checked && value != null && value != mxConstants.NONE &&
+				defaultColor != mxConstants.NONE)
+			{
+				defaultColor = value;
+			}
+			
+			apply((cb.checked) ? defaultColor : mxConstants.NONE);
+		}
 	});
 	
 	apply(value, true);
@@ -1416,9 +1430,13 @@ ArrangePanel.prototype.init = function()
 	// Special case that adds two panels
 	this.addGeometry(this.container);
 	this.addEdgeGeometry(this.container);
-	this.container.appendChild(this.addAngle(this.createPanel()));
 
-	if (!ss.containsLabel)
+	if (!ss.containsLabel || ss.edges.length == 0)
+	{
+		this.container.appendChild(this.addAngle(this.createPanel()));
+	}
+	
+	if (!ss.containsLabel && ss.edges.length == 0)
 	{
 		this.container.appendChild(this.addFlip(this.createPanel()));
 	}
@@ -1522,7 +1540,7 @@ ArrangePanel.prototype.addGroupOps = function(div)
 		div.appendChild(btn);
 		count++;
 	}
-	else if (ss.edges.length > 0)
+	else if (graph.getSelectionCount() > 0)
 	{
 		if (count > 0)
 		{
@@ -1534,7 +1552,7 @@ ArrangePanel.prototype.addGroupOps = function(div)
 			this.editorUi.actions.get('clearWaypoints').funct();
 		}));
 		
-		btn.setAttribute('title', mxResources.get('clearWaypoints'));
+		btn.setAttribute('title', mxResources.get('clearWaypoints') + ' (' + this.editorUi.actions.get('clearWaypoints').shortcut + ')');
 		btn.style.width = '202px';
 		btn.style.marginBottom = '2px';
 		div.appendChild(btn);
@@ -1708,53 +1726,83 @@ ArrangePanel.prototype.addAngle = function(div)
 	var graph = editor.graph;
 	var ss = this.format.getSelectionState();
 
-	div.style.paddingBottom = '28px';
+	div.style.paddingBottom = '8px';
 	
 	var span = document.createElement('div');
 	span.style.position = 'absolute';
 	span.style.width = '70px';
 	span.style.marginTop = '0px';
 	span.style.fontWeight = 'bold';
-	mxUtils.write(span, mxResources.get('angle'));
-	div.appendChild(span);
 	
+	var input = null;
 	var update = null;
-	var input = this.addUnitInput(div, '°', 84, 44, function()
+	var btn = null;
+	
+	if (ss.edges.length == 0)
 	{
-		update.apply(this, arguments);
-	});
+		mxUtils.write(span, mxResources.get('angle'));
+		div.appendChild(span);
+		
+		input = this.addUnitInput(div, '°', 20, 44, function()
+		{
+			update.apply(this, arguments);
+		});
+		
+		mxUtils.br(div);
+		div.style.paddingTop = '10px';
+	}
+	else
+	{
+		div.style.paddingTop = '8px';
+	}
 
 	if (!ss.containsLabel)
 	{
-		var btn = mxUtils.button(mxResources.get('turn'), function(evt)
+		var label = mxResources.get('reverse');
+		
+		if (ss.vertices.length > 0 && ss.edges.length > 0)
+		{
+			label = mxResources.get('turn') + ' / ' + label;
+		}
+		else if (ss.vertices.length > 0)
+		{
+			label = mxResources.get('turn');
+		}
+
+		btn = mxUtils.button(label, function(evt)
 		{
 			ui.actions.get('turn').funct();
 		})
 		
-		btn.setAttribute('title', mxResources.get('turn') + ' (' + this.editorUi.actions.get('turn').shortcut + ')');
-		btn.style.position = 'absolute';
-		btn.style.marginTop = '-2px';
-		btn.style.right = '20px';
-		btn.style.width = '61px';
+		btn.setAttribute('title', label + ' (' + this.editorUi.actions.get('turn').shortcut + ')');
+		btn.style.width = '202px';
 		div.appendChild(btn);
-	}
-
-	var listener = mxUtils.bind(this, function(sender, evt, force)
-	{
-		if (force || document.activeElement != input)
+		
+		if (input != null)
 		{
-			ss = this.format.getSelectionState();
-			var tmp = parseFloat(mxUtils.getValue(ss.style, mxConstants.STYLE_ROTATION, 0));
-			input.value = (isNaN(tmp)) ? '' : tmp  + '°';
+			btn.style.marginTop = '8px';
 		}
-	});
-
-	update = this.installInputHandler(input, mxConstants.STYLE_ROTATION, 0, 0, 360, '°', null, true);
-	this.addKeyHandler(input, listener);
-
-	graph.getModel().addListener(mxEvent.CHANGE, listener);
-	this.listeners.push({destroy: function() { graph.getModel().removeListener(listener); }});
-	listener();
+	}
+	
+	if (input != null)
+	{
+		var listener = mxUtils.bind(this, function(sender, evt, force)
+		{
+			if (force || document.activeElement != input)
+			{
+				ss = this.format.getSelectionState();
+				var tmp = parseFloat(mxUtils.getValue(ss.style, mxConstants.STYLE_ROTATION, 0));
+				input.value = (isNaN(tmp)) ? '' : tmp  + '°';
+			}
+		});
+	
+		update = this.installInputHandler(input, mxConstants.STYLE_ROTATION, 0, 0, 360, '°', null, true);
+		this.addKeyHandler(input, listener);
+	
+		graph.getModel().addListener(mxEvent.CHANGE, listener);
+		this.listeners.push({destroy: function() { graph.getModel().removeListener(listener); }});
+		listener();
+	}
 
 	return div;
 };
@@ -2179,6 +2227,12 @@ TextFormatPanel.prototype.addFont = function(container)
 	fontMenu.style.width = '192px';
 	fontMenu.style.height = '15px';
 	
+	// Workaround for offset in FF
+	if (mxClient.IS_FF)
+	{
+		fontMenu.getElementsByTagName('div')[0].style.marginTop = '-18px';
+	}
+	
 	var stylePanel2 = stylePanel.cloneNode(false);
 	stylePanel2.style.marginLeft = '-3px';
 	var fontStyleItems = this.editorUi.toolbar.addItems(['bold', 'italic', 'underline'], stylePanel2, true);
@@ -2266,11 +2320,13 @@ TextFormatPanel.prototype.addFont = function(container)
 				document.execCommand('justifyfull', false, null);
 			}, stylePanel3);
 		this.styleButtons([full,
-       		sub = this.editorUi.toolbar.addButton('geSprite-subscript', mxResources.get('subscript') + ' (Ctrl+,)',
+       		sub = this.editorUi.toolbar.addButton('geSprite-subscript',
+       			mxResources.get('subscript') + ' (' + Editor.ctrlKey + '+,)',
 			function()
 			{
 				document.execCommand('subscript', false, null);
-			}, stylePanel3), sup = this.editorUi.toolbar.addButton('geSprite-superscript', mxResources.get('superscript') + ' (Ctrl+.)',
+			}, stylePanel3), sup = this.editorUi.toolbar.addButton('geSprite-superscript',
+				mxResources.get('superscript') + ' (' + Editor.ctrlKey + '+.)',
 			function()
 			{
 				document.execCommand('superscript', false, null);
@@ -2378,7 +2434,7 @@ TextFormatPanel.prototype.addFont = function(container)
 	dirSelect.style.marginTop = '-2px';
 
 	// NOTE: For automatic we use the value null since automatic
-	// requires the text to be non formatted and non-wrappedto
+	// requires the text to be non formatted and non-wrapped
 	var dirs = ['automatic', 'leftToRight', 'rightToLeft'];
 	var dirSet = {'automatic': null,
 			'leftToRight': mxConstants.TEXT_DIRECTION_LTR,
@@ -2642,7 +2698,7 @@ TextFormatPanel.prototype.addFont = function(container)
 		container.appendChild(this.createRelativeOption(mxResources.get('lineheight'), null, null, function(input)
 		{
 			var value = (input.value == '') ? 120 : parseInt(input.value);
-			value = Math.max(120, (isNaN(value)) ? 120 : value);
+			value = Math.max(0, (isNaN(value)) ? 120 : value);
 
 			if (selState != null)
 			{
@@ -2658,11 +2714,11 @@ TextFormatPanel.prototype.addFont = function(container)
 				node = node.parentNode;
 			}
 			
-			if (node == graph.cellEditor.textarea && graph.cellEditor.textarea.firstChild != null)
+			if (node != null && node == graph.cellEditor.textarea && graph.cellEditor.textarea.firstChild != null)
 			{
-				if (graph.cellEditor.textarea.firstChild.nodeName != 'FONT')
+				if (graph.cellEditor.textarea.firstChild.nodeName != 'P')
 				{
-					graph.cellEditor.textarea.innerHTML = '<font>' + graph.cellEditor.textarea.innerHTML + '</font>';
+					graph.cellEditor.textarea.innerHTML = '<p>' + graph.cellEditor.textarea.innerHTML + '</p>';
 				}
 				
 				node = graph.cellEditor.textarea.firstChild;
@@ -3114,6 +3170,13 @@ TextFormatPanel.prototype.addFont = function(container)
 					
 					if (node != null)
 					{
+						// Workaround for commonAncestor on range in IE11 returning parent of common ancestor
+						if (node == graph.cellEditor.textarea && graph.cellEditor.textarea.children.length == 1 &&
+							graph.cellEditor.textarea.firstChild.nodeType == mxConstants.NODETYPE_ELEMENT)
+						{
+							node = graph.cellEditor.textarea.firstChild;
+						}
+						
 						var css = mxUtils.getCurrentStyle(node);
 						
 						if (css != null)
@@ -3220,6 +3283,16 @@ TextFormatPanel.prototype.addFont = function(container)
 								{
 									ff = ff.substring(0, ff.length - 1);
 								}
+
+								if (ff.charAt(0) == '"')
+								{
+									ff = ff.substring(1);
+								}
+								
+								if (ff.charAt(ff.length - 1) == '"')
+								{
+									ff = ff.substring(0, ff.length - 1);
+								}
 								
 								fontMenu.firstChild.nodeValue = ff;
 							}
@@ -3272,6 +3345,7 @@ StyleFormatPanel.prototype.init = function()
 	}
 
 	this.container.appendChild(this.addStroke(this.createPanel()));
+	this.container.appendChild(this.addLineJumps(this.createPanel()));
 	var opacityPanel = this.createRelativeOption(mxResources.get('opacity'), mxConstants.STYLE_OPACITY, 41);
 	opacityPanel.style.paddingTop = '8px';
 	opacityPanel.style.paddingBottom = '8px';
@@ -3410,7 +3484,7 @@ StyleFormatPanel.prototype.addFill = function(container)
 		
 		var fillColor = mxUtils.getValue(ss.style, mxConstants.STYLE_FILLCOLOR, null);
 
-		if (!ss.fill || ss.containsImage || fillColor == null || fillColor == mxConstants.NONE)
+		if (!ss.fill || ss.containsImage || fillColor == null || fillColor == mxConstants.NONE || ss.style.shape == 'filledEdge')
 		{
 			gradientPanel.style.display = 'none';
 		}
@@ -3688,7 +3762,9 @@ StyleFormatPanel.prototype.addStroke = function(container)
 	{
 		if (ss.style.shape == 'connector' || ss.style.shape == 'flexArrow')
 		{
-			this.editorUi.menus.edgeStyleChange(menu, '', [mxConstants.STYLE_STARTARROW, 'startFill'], [mxConstants.NONE, 0], 'geIcon geSprite geSprite-noarrow', null, false).setAttribute('title', mxResources.get('none'));
+			var item = this.editorUi.menus.edgeStyleChange(menu, '', [mxConstants.STYLE_STARTARROW, 'startFill'], [mxConstants.NONE, 0], 'geIcon', null, false);
+			item.setAttribute('title', mxResources.get('none'));
+			item.firstChild.firstChild.innerHTML = '<font style="font-size:10px;">' + mxUtils.htmlEntities(mxResources.get('none')) + '</font>';
 
 			if (ss.style.shape == 'connector')
 			{
@@ -3734,8 +3810,10 @@ StyleFormatPanel.prototype.addStroke = function(container)
 	{
 		if (ss.style.shape == 'connector' || ss.style.shape == 'flexArrow')
 		{
-			this.editorUi.menus.edgeStyleChange(menu, '', [mxConstants.STYLE_ENDARROW, 'endFill'], [mxConstants.NONE, 0], 'geIcon geSprite geSprite-noarrow', null, false).setAttribute('title', mxResources.get('none'));
-	
+			var item = this.editorUi.menus.edgeStyleChange(menu, '', [mxConstants.STYLE_ENDARROW, 'endFill'], [mxConstants.NONE, 0], 'geIcon', null, false);
+			item.setAttribute('title', mxResources.get('none'));
+			item.firstChild.firstChild.innerHTML = '<font style="font-size:10px;">' + mxUtils.htmlEntities(mxResources.get('none')) + '</font>';
+			
 			if (ss.style.shape == 'connector')
 			{
 				this.editorUi.menus.edgeStyleChange(menu, '', [mxConstants.STYLE_ENDARROW, 'endFill'], [mxConstants.ARROW_CLASSIC, 1], 'geIcon geSprite geSprite-endclassic', null, false).setAttribute('title', mxResources.get('classic'));
@@ -3931,7 +4009,7 @@ StyleFormatPanel.prototype.addStroke = function(container)
 			altInput.value = (isNaN(tmp)) ? '' : tmp + ' pt';
 		}
 		
-		styleSelect.style.visibility = (ss.style.shape == 'connector') ? '' : 'hidden';
+		styleSelect.style.visibility = (ss.style.shape == 'connector' || ss.style.shape == 'filledEdge') ? '' : 'hidden';
 		
 		if (mxUtils.getValue(ss.style, mxConstants.STYLE_CURVED, null) == '1')
 		{
@@ -4035,6 +4113,16 @@ StyleFormatPanel.prototype.addStroke = function(container)
 			
 			markerDiv.className = ui.getCssClassForMarker(prefix, ss.style.shape, marker, fill);
 			
+			if (markerDiv.className == 'geSprite geSprite-noarrow')
+			{
+				markerDiv.innerHTML = mxUtils.htmlEntities(mxResources.get('none'));
+				markerDiv.style.backgroundImage = 'none';
+				markerDiv.style.verticalAlign = 'top';
+				markerDiv.style.marginTop = '5px';
+				markerDiv.style.fontSize = '10px';
+				markerDiv.nextSibling.style.marginTop = '0px';
+			}
+			
 			return markerDiv;
 		};
 		
@@ -4116,6 +4204,107 @@ StyleFormatPanel.prototype.addStroke = function(container)
 	this.listeners.push({destroy: function() { graph.getModel().removeListener(listener); }});
 	listener();
 
+	return container;
+};
+
+/**
+ * Adds UI for configuring line jumps.
+ */
+StyleFormatPanel.prototype.addLineJumps = function(container)
+{
+	var ss = this.format.getSelectionState();
+	
+	if (Graph.lineJumpsEnabled && ss.edges.length > 0 &&
+		ss.vertices.length == 0 && ss.lineJumps)
+	{
+		container.style.padding = '8px 0px 24px 18px';
+		
+		var ui = this.editorUi;
+		var editor = ui.editor;
+		var graph = editor.graph;
+		
+		var span = document.createElement('div');
+		span.style.position = 'absolute';
+		span.style.fontWeight = 'bold';
+		span.style.width = '80px';
+		
+		mxUtils.write(span, mxResources.get('lineJumps'));
+		container.appendChild(span);
+		
+		var styleSelect = document.createElement('select');
+		styleSelect.style.position = 'absolute';
+		styleSelect.style.marginTop = '-2px';
+		styleSelect.style.right = '76px';
+		styleSelect.style.width = '62px';
+
+		var styles = ['none', 'arc', 'gap', 'sharp'];
+
+		for (var i = 0; i < styles.length; i++)
+		{
+			var styleOption = document.createElement('option');
+			styleOption.setAttribute('value', styles[i]);
+			mxUtils.write(styleOption, mxResources.get(styles[i]));
+			styleSelect.appendChild(styleOption);
+		}
+		
+		mxEvent.addListener(styleSelect, 'change', function(evt)
+		{
+			graph.getModel().beginUpdate();
+			try
+			{
+				graph.setCellStyles('jumpStyle', styleSelect.value, graph.getSelectionCells());
+				ui.fireEvent(new mxEventObject('styleChanged', 'keys', ['jumpStyle'],
+					'values', [styleSelect.value], 'cells', graph.getSelectionCells()));
+			}
+			finally
+			{
+				graph.getModel().endUpdate();
+			}
+			
+			mxEvent.consume(evt);
+		});
+		
+		// Stops events from bubbling to color option event handler
+		mxEvent.addListener(styleSelect, 'click', function(evt)
+		{
+			mxEvent.consume(evt);
+		});
+		
+		container.appendChild(styleSelect);
+		
+		var jumpSizeUpdate;
+		
+		var jumpSize = this.addUnitInput(container, 'pt', 22, 33, function()
+		{
+			jumpSizeUpdate.apply(this, arguments);
+		});
+		
+		jumpSizeUpdate = this.installInputHandler(jumpSize, 'jumpSize',
+			Graph.defaultJumpSize, 0, 999, ' pt');
+		
+		var listener = mxUtils.bind(this, function(sender, evt, force)
+		{
+			ss = this.format.getSelectionState();
+			styleSelect.value = mxUtils.getValue(ss.style, 'jumpStyle', 'none');
+
+			if (force || document.activeElement != jumpSize)
+			{
+				var tmp = parseInt(mxUtils.getValue(ss.style, 'jumpSize', Graph.defaultJumpSize));
+				jumpSize.value = (isNaN(tmp)) ? '' : tmp  + ' pt';
+			}
+		});
+
+		this.addKeyHandler(jumpSize, listener);
+
+		graph.getModel().addListener(mxEvent.CHANGE, listener);
+		this.listeners.push({destroy: function() { graph.getModel().removeListener(listener); }});
+		listener();
+	}
+	else
+	{
+		container.style.display = 'none';
+	}
+	
 	return container;
 };
 
@@ -4341,7 +4530,10 @@ DiagramFormatPanel.prototype.addView = function(div)
 			return graph.background;
 		}, function(color)
 		{
-			ui.setBackgroundColor(color);
+			var change = new ChangePageSetup(ui, color);
+			change.ignoreImage = true;
+			
+			graph.model.execute(change);
 		}, '#ffffff',
 		{
 			install: function(apply)
@@ -4618,218 +4810,39 @@ DiagramFormatPanel.prototype.addPaperSize = function(div)
 	var graph = editor.graph;
 	
 	div.appendChild(this.createTitle(mxResources.get('paperSize')));
-	
-	var portraitCheckBox = document.createElement('input');
-	portraitCheckBox.setAttribute('name', 'format');
-	portraitCheckBox.setAttribute('type', 'radio');
-	portraitCheckBox.setAttribute('value', 'portrait');
-	
-	var landscapeCheckBox = document.createElement('input');
-	landscapeCheckBox.setAttribute('name', 'format');
-	landscapeCheckBox.setAttribute('type', 'radio');
-	landscapeCheckBox.setAttribute('value', 'landscape');
-	
-	var paperSizeSelect = document.createElement('select');
-	paperSizeSelect.style.marginBottom = '8px';
-	paperSizeSelect.style.width = '202px';
 
-	var formatDiv = document.createElement('div');
-	formatDiv.style.marginLeft = '4px';
-	formatDiv.style.width = '210px';
-	formatDiv.style.height = '24px';
-
-	portraitCheckBox.style.marginRight = '6px';
-	formatDiv.appendChild(portraitCheckBox);
-	
-	var portraitSpan = document.createElement('span');
-	portraitSpan.style.maxWidth = '100px';
-	mxUtils.write(portraitSpan, mxResources.get('portrait'));
-	formatDiv.appendChild(portraitSpan);
-
-	landscapeCheckBox.style.marginLeft = '10px';
-	landscapeCheckBox.style.marginRight = '6px';
-	formatDiv.appendChild(landscapeCheckBox);
-	
-	var landscapeSpan = document.createElement('span');
-	landscapeSpan.style.width = '100px';
-	mxUtils.write(landscapeSpan, mxResources.get('landscape'));
-	formatDiv.appendChild(landscapeSpan)
-
-	var customDiv = document.createElement('div');
-	customDiv.style.marginLeft = '4px';
-	customDiv.style.width = '210px';
-	customDiv.style.height = '24px';
-	
-	var widthInput = document.createElement('input');
-	widthInput.setAttribute('size', '6');
-	widthInput.setAttribute('value', graph.pageFormat.width);
-	customDiv.appendChild(widthInput);
-	mxUtils.write(customDiv, ' x ');
-	
-	var heightInput = document.createElement('input');
-	heightInput.setAttribute('size', '6');
-	heightInput.setAttribute('value', graph.pageFormat.height);
-	customDiv.appendChild(heightInput);
-	mxUtils.write(customDiv, ' pt');
-
-	formatDiv.style.display = 'none';
-	customDiv.style.display = 'none';
-	
-	var pf = new Object();
-	var formats = PageSetupDialog.getFormats();
-	
-	for (var i = 0; i < formats.length; i++)
+	var accessor = PageSetupDialog.addPageFormatPanel(div, 'formatpanel', graph.pageFormat, function(pageFormat)
 	{
-		var f = formats[i];
-		pf[f.key] = f;
-
-		var paperSizeOption = document.createElement('option');
-		paperSizeOption.setAttribute('value', f.key);
-		mxUtils.write(paperSizeOption, f.title);
-		paperSizeSelect.appendChild(paperSizeOption);
-	}
-	
-	var customSize = false;
-	
-	function listener(sender, evt, force)
-	{
-		if (force || (widthInput != document.activeElement && heightInput != document.activeElement))
+		if (graph.pageFormat == null || graph.pageFormat.width != pageFormat.width ||
+			graph.pageFormat.height != pageFormat.height)
 		{
-			var detected = false;
+			var change = new ChangePageSetup(ui, null, null, pageFormat);
+			change.ignoreColor = true;
+			change.ignoreImage = true;
 			
-			for (var i = 0; i < formats.length; i++)
-			{
-				var f = formats[i];
-	
-				// Special case where custom was chosen
-				if (customSize)
-				{
-					if (f.key == 'custom')
-					{
-						paperSizeSelect.value = f.key;
-						customSize = false;
-					}
-				}
-				else if (f.format != null)
-				{
-					if (graph.pageFormat.width == f.format.width && graph.pageFormat.height == f.format.height)
-					{
-						paperSizeSelect.value = f.key;
-						portraitCheckBox.setAttribute('checked', 'checked');
-						portraitCheckBox.defaultChecked = true;
-						portraitCheckBox.checked = true;
-						landscapeCheckBox.removeAttribute('checked');
-						landscapeCheckBox.defaultChecked = false;
-						landscapeCheckBox.checked = false;
-						detected = true;
-					}
-					else if (graph.pageFormat.width == f.format.height && graph.pageFormat.height == f.format.width)
-					{
-						paperSizeSelect.value = f.key;
-						portraitCheckBox.removeAttribute('checked');
-						portraitCheckBox.defaultChecked = false;
-						portraitCheckBox.checked = false;
-						landscapeCheckBox.setAttribute('checked', 'checked');
-						landscapeCheckBox.defaultChecked = true;
-						landscapeCheckBox.checked = true;
-						detected = true;
-					}
-				}
-			}
-			
-			// Selects custom format which is last in list
-			if (!detected)
-			{
-				widthInput.value = graph.pageFormat.width;
-				heightInput.value = graph.pageFormat.height;
-				paperSizeOption.setAttribute('selected', 'selected');
-				portraitCheckBox.setAttribute('checked', 'checked');
-				portraitCheckBox.defaultChecked = true;
-				formatDiv.style.display = 'none';
-				customDiv.style.display = '';
-			}
-			else
-			{
-				formatDiv.style.display = '';
-				customDiv.style.display = 'none';
-			}
+			graph.model.execute(change);
 		}
+	});
+	
+	this.addKeyHandler(accessor.widthInput, function()
+	{
+		accessor.set(graph.pageFormat);
+	});
+-	this.addKeyHandler(accessor.heightInput, function()
+	{
+		accessor.set(graph.pageFormat);	
+	});
+	
+	var listener = function()
+	{
+		accessor.set(graph.pageFormat);
 	};
-	listener();
-
-	div.appendChild(paperSizeSelect);
-	mxUtils.br(div);
-
-	div.appendChild(formatDiv);
-	div.appendChild(customDiv);
-	
-	var update = function()
-	{
-		var f = pf[paperSizeSelect.value];
-		
-		if (f.format != null)
-		{
-			widthInput.value = f.format.width;
-			heightInput.value = f.format.height;
-			customDiv.style.display = 'none';
-			formatDiv.style.display = '';
-		}
-		else
-		{
-			formatDiv.style.display = 'none';
-			customDiv.style.display = '';
-		}
-		
-		var size = new mxRectangle(0, 0, parseInt(widthInput.value), parseInt(heightInput.value));
-		
-		if (paperSizeSelect.value != 'custom' && landscapeCheckBox.checked)
-		{
-			size = new mxRectangle(0, 0, size.height, size.width);
-		}
-		
-		if (graph.pageFormat == null || graph.pageFormat.width != size.width || graph.pageFormat.height != size.height)
-		{
-			ui.setPageFormat(size);
-		}
-	};
-
-	this.addKeyHandler(widthInput, listener);
-	this.addKeyHandler(heightInput, listener);
-	
-	mxEvent.addListener(portraitSpan, 'click', function(evt)
-	{
-		portraitCheckBox.checked = true;
-		update();
-		mxEvent.consume(evt);
-	});
-	
-	mxEvent.addListener(landscapeSpan, 'click', function(evt)
-	{
-		landscapeCheckBox.checked = true;
-		update();
-		mxEvent.consume(evt);
-	});
-	
-	mxEvent.addListener(widthInput, 'blur', update);
-	mxEvent.addListener(widthInput, 'click', update);
-	mxEvent.addListener(heightInput, 'blur', update);
-	mxEvent.addListener(heightInput, 'click', update);
-	mxEvent.addListener(landscapeCheckBox, 'change', update);
-	mxEvent.addListener(portraitCheckBox, 'change', update);
-	mxEvent.addListener(paperSizeSelect, 'change', function()
-	{
-		// Handles special case where custom was chosen
-		customSize = paperSizeSelect.value == 'custom';
-		update();
-	});
 	
 	ui.addListener('pageFormatChanged', listener);
 	this.listeners.push({destroy: function() { ui.removeListener(listener); }});
 	
 	graph.getModel().addListener(mxEvent.CHANGE, listener);
 	this.listeners.push({destroy: function() { graph.getModel().removeListener(listener); }});
-	
-	update();
 	
 	return div;
 };
