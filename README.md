@@ -30,3 +30,9 @@ History
 =======
 
 We created mxGraph in 2005 as a commercial project and it ran through to 2016 that way. Our USP was the support for non-SVG browsers, when that advantage expired we moved onto commercial activity around draw.io. mxGraph is pretty much feature complete, production tested in many large enterprises and stable for many years. We actively fix bugs and make minor improvements since it comprises the base of our draw.io stack.
+
+Changes by Ploetz + Zeller GmbH
+===============================
+- Change pointer-events for links, add all, remove none
+- Set default fill for polylines
+- Add epsilon comparison for edge smoothing
