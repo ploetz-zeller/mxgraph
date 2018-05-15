@@ -661,7 +661,7 @@ mxGraphHandler.prototype.removeHint = function() { };
  */
 mxGraphHandler.prototype.roundLength = function(length)
 {
-	return Math.round(length);
+	return Math.round(length * 2) / 2;
 };
 
 /**
@@ -1007,6 +1007,9 @@ mxGraphHandler.prototype.moveCells = function(cells, dx, dy, clone, target, evt)
 	{
 		target = this.graph.getDefaultParent();
 	}
+	
+	// Cloning into locked cells is not allowed
+	clone = clone && !this.graph.isCellLocked(target || this.graph.getDefaultParent());
 	
 	// Passes all selected cells in order to correctly clone or move into
 	// the target cell. The method checks for each cell if its movable.
