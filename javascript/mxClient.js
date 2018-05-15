@@ -321,7 +321,6 @@ var mxClient = {
             }
         }
     }
-
 };
 
 /**
@@ -934,7 +933,6 @@ var mxLog = {
 
         mxLog.write(string + '\n');
     }
-
 };
 /**
  * Copyright (c) 2006-2015, JGraph Ltd
@@ -997,7 +995,6 @@ var mxObjectIdentity = {
             delete obj[mxObjectIdentity.FIELD_NAME];
         }
     }
-
 };
 /**
  * Copyright (c) 2006-2015, JGraph Ltd
@@ -1502,7 +1499,6 @@ var mxResources = {
             mxResources.add(mxClient.basePath + '/resources/graph', null, callback);
         });
     }
-
 };
 /**
  * Copyright (c) 2006-2015, JGraph Ltd
@@ -1726,7 +1722,6 @@ mxRectangle.fromRectangle = function (rect) {
  * Copyright (c) 2006-2015, Gaudenz Alder
  */
 var mxEffects = {
-
     /**
      * Class: mxEffects
      *
@@ -1899,7 +1894,6 @@ var mxEffects = {
             }
         }
     }
-
 };
 /**
  * Copyright (c) 2006-2015, JGraph Ltd
@@ -5710,7 +5704,6 @@ var mxUtils = {
 
         return dragSource;
     }
-
 };
 /**
  * Copyright (c) 2006-2015, JGraph Ltd
@@ -7984,7 +7977,6 @@ var mxConstants = {
      * for the STYLE_PERIMETER style.
      */
     PERIMETER_TRIANGLE: 'trianglePerimeter'
-
 };
 /**
  * Copyright (c) 2006-2015, JGraph Ltd
@@ -8489,7 +8481,6 @@ mxEventSource.prototype.fireEvent = function (evt, sender) {
  * Copyright (c) 2006-2015, Gaudenz Alder
  */
 var mxEvent = {
-
     /**
      * Class: mxEvent
      *
@@ -9776,7 +9767,6 @@ var mxEvent = {
      * Specifies the event name for reset.
      */
     RESET: 'reset'
-
 };
 /**
  * Copyright (c) 2006-2015, JGraph Ltd
@@ -10417,7 +10407,6 @@ var mxClipboard = {
 
         return cells;
     }
-
 };
 /**
  * Copyright (c) 2006-2015, JGraph Ltd
@@ -16314,7 +16303,6 @@ mxXmlCanvas2D.prototype.setShadowAlpha = function (value) {
     var elem = this.createElement('shadowalpha');
     elem.setAttribute('alpha', value);
     this.root.appendChild(elem);
-
 };
 
 /**
@@ -16340,7 +16328,6 @@ mxXmlCanvas2D.prototype.setShadowOffset = function (dx, dy) {
     elem.setAttribute('dx', dx);
     elem.setAttribute('dy', dy);
     this.root.appendChild(elem);
-
 };
 
 /**
@@ -18913,7 +18900,6 @@ mxVmlCanvas2D.prototype.quadTo = function (x1, y1, x2, y2) {
         ' ' + this.format(cpx3) + ' ' + this.format(cpy3));
     this.lastX = (cpx3 / s.scale) - s.dx;
     this.lastY = (cpy3 / s.scale) - s.dy;
-
 };
 
 /**
@@ -19399,7 +19385,7 @@ mxVmlCanvas2D.prototype.plainText = function (x, y, w, h, str, align, valign, wr
     var dy = 0;
 
     if (valign == mxConstants.ALIGN_BOTTOM) {
-        dy =  - textHeight / 2;
+        dy = -textHeight / 2;
     } else if (valign != mxConstants.ALIGN_MIDDLE) // top
     {
         dy = textHeight / 2;
@@ -21928,7 +21914,6 @@ var mxStencilRegistry = {
     getStencil: function (name) {
         return mxStencilRegistry.stencils[name];
     }
-
 };
 /**
  * Copyright (c) 2006-2015, JGraph Ltd
@@ -21967,7 +21952,6 @@ var mxMarker = {
 
         return (funct != null) ? funct(canvas, shape, type, pe, unitX, unitY, size, source, sw, filled) : null;
     }
-
 };
 
 /**
@@ -23060,7 +23044,7 @@ mxArrowConnector.prototype.paintEdgeShape = function (c, pts) {
     }
 
     orthx = edgeWidth * ny1;
-    orthy =  - edgeWidth * nx1;
+    orthy = -edgeWidth * nx1;
 
     if (markerEnd && !openEnded) {
         this.paintMarker(c, pe.x, pe.y, -nx, -ny, endSize, endWidth, edgeWidth, spacing, false);
@@ -31469,7 +31453,7 @@ mxMedianHybridCrossingReduction.prototype.medianValue = function (connectedCells
         return (medianValues[medianPoint - 1] * rightMedian + medianValues[medianPoint]
              * leftMedian)
         / (leftMedian + rightMedian);
-        	}
+            }
         };
 
         /**
@@ -31985,9 +31969,9 @@ mxMedianHybridCrossingReduction.prototype.medianValue = function (connectedCells
                     cellMedian = (medianNextLevel * numNextLayerConnected + medianPreviousLevel
                          * numPreviousLayerConnected)
                     / numConnectedNeighbours;
-                    		}
+                            }
 
-                    		/ / Flag storing whether or not position has changed
+                            / / Flag storing whether or not position has changed
                     var positionChanged = false;
 
                     if (cellMedian < currentPosition - tolerance) {
@@ -32187,8 +32171,8 @@ mxMedianHybridCrossingReduction.prototype.medianValue = function (connectedCells
                                     .getGeneralPurposeVariable(rankValue)
                                      + leftCell.width
                                     / 2.0
-                                    							+ this.intraCellSpacing
-                                    							+ leftBuffer + cell.width /2.0;
+                                                            + this.intraCellSpacing
+                                                            + leftBuffer + cell.width /2.0;
                                 j = -1;
                             } else {
                                 leftBuffer += leftCell.width + this.intraCellSpacing;
@@ -32214,8 +32198,8 @@ mxMedianHybridCrossingReduction.prototype.medianValue = function (connectedCells
                                     .getGeneralPurposeVariable(rankValue)
                                      - rightCell.width
                                     / 2.0
-                                    							- this.intraCellSpacing
-                                    							- rightBuffer - cell.width /2.0;
+                                                            - this.intraCellSpacing
+                                                            - rightBuffer - cell.width /2.0;
                                 j = weightedValues.length;
                             } else {
                                 rightBuffer += rightCell.width + this.intraCellSpacing;
@@ -32358,69 +32342,59 @@ mxMedianHybridCrossingReduction.prototype.medianValue = function (connectedCells
                 var localX = this.initialX + (this.widestRankValue - this.rankWidths[rankValue])
                     / 2;
 
-                    	/ / Store whether or not any of the cells ' bounds were unavailable so
-                    	// to only issue the warning once for all cells
-                    	var boundsWarning = false;
+                        / / Store whether or not any of the cells ' bounds were unavailable so
+                        // to only issue the warning once for all cells
+                        var boundsWarning = false;
 
-                    	for (var i = 0; i < rank.length; i++)
-                    	{
-                    		var node = rank[i];
+                        for (var i = 0; i < rank.length; i++) {
+                            var node = rank[i];
 
-                    		if (node.isVertex())
-                    		{
-                    			var bounds = this.layout.getVertexBounds(node.cell);
+                            if (node.isVertex()) {
+                                var bounds = this.layout.getVertexBounds(node.cell);
 
-                    			if (bounds != null)
-                    			{
-                    				if (this.orientation == mxConstants.DIRECTION_NORTH ||
-                    					this.orientation == mxConstants.DIRECTION_SOUTH)
-                    				{
-                    					node.width = bounds.width;
-                    					node.height = bounds.height;
-                    				}
-                    				else
-                    				{
-                    					node.width = bounds.height;
-                    					node.height = bounds.width;
-                    				}
-                    			}
-                    			else
-                    			{
-                    				boundsWarning = true;
-                    			}
+                                if (bounds != null) {
+                                    if (this.orientation == mxConstants.DIRECTION_NORTH ||
+                                        this.orientation == mxConstants.DIRECTION_SOUTH) {
+                                        node.width = bounds.width;
+                                        node.height = bounds.height;
+                                    }
+                                    else {
+                                        node.width = bounds.height;
+                                        node.height = bounds.width;
+                                    }
+                                }
+                                else {
+                                    boundsWarning = true;
+                                }
 
-                    			maxY = Math.max(maxY, node.height);
-                    		}
-                    		else if (node.isEdge())
-                    		{
-                    			// The width is the number of additional parallel edges
-                    			// time the parallel edge spacing
-                    			var numEdges = 1;
+                                maxY = Math.max(maxY, node.height);
+                            }
+                            else if (node.isEdge()) {
+                                // The width is the number of additional parallel edges
+                                // time the parallel edge spacing
+                                var numEdges = 1;
 
-                    			if (node.edges != null)
-                    			{
-                    				numEdges = node.edges.length;
-                    			}
-                    			else
-                    			{
-                    				mxLog.warn(' edge.edges is null ');
-                    			}
+                                if (node.edges != null) {
+                                    numEdges = node.edges.length;
+                                }
+                                else {
+                                    mxLog.warn(' edge.edges is null ');
+                                }
 
-                    			node.width = (numEdges - 1) * this.parallelEdgeSpacing;
-                    		}
+                                node.width = (numEdges - 1) * this.parallelEdgeSpacing;
+                            }
 
-                    		// Set the initial x-value as being the best result so far
-                    		localX += node.width / 2.0;
-                    		node.setX(rankValue, localX);
-                    		node.setGeneralPurposeVariable(rankValue, localX);
-                    		localX += node.width / 2.0;
-                    		localX += this.intraCellSpacing;
-                    	}
+                            // Set the initial x-value as being the best result so far
+                            localX += node.width / 2.0;
+                            node.setX(rankValue, localX);
+                            node.setGeneralPurposeVariable(rankValue, localX);
+                            localX += node.width / 2.0;
+                            localX += this.intraCellSpacing;
+                        }
 
-                    	if (boundsWarning == true)
-                    	{
-                    		mxLog.warn(' At least one cell has no bounds ');
-                    	}
+                        if (boundsWarning == true) {
+                            mxLog.warn(' At least one cell has no bounds ');
+                        }
                     };
 
                     /**
@@ -32434,24 +32408,23 @@ mxMedianHybridCrossingReduction.prototype.medianValue = function (connectedCells
                      * graph - the facade describing the input graph
                      * model - an internal model of the hierarchical layout
                      */
-                    mxCoordinateAssignment.prototype.calculateWidestRank = function(graph, model){
-                    	// Starting y co-ordinate
-                    	var y = -this.interRankCellSpacing;
+                    mxCoordinateAssignment.prototype.calculateWidestRank = function (graph, model) {
+                        // Starting y co-ordinate
+                        var y = -this.interRankCellSpacing;
 
-                    	// Track the widest cell on the last rank since the y
-                    	// difference depends on it
-                    	var lastRankMaxCellHeight = 0.0;
-                    	this.rankWidths = [];
-                    	this.rankY = [];
+                        // Track the widest cell on the last rank since the y
+                        // difference depends on it
+                        var lastRankMaxCellHeight = 0.0;
+                        this.rankWidths = [];
+                        this.rankY = [];
 
-                    	for (var rankValue = model.maxRank; rankValue >= 0; rankValue--)
-                    	{
-                    		// Keep track of the widest cell on this rank
-                    		var maxCellHeight = 0.0;
-                    		var rank = model.ranks[rankValue];
-                    		var localX = this.initialX;
+                        for (var rankValue = model.maxRank; rankValue >= 0; rankValue--) {
+                            // Keep track of the widest cell on this rank
+                            var maxCellHeight = 0.0;
+                            var rank = model.ranks[rankValue];
+                            var localX = this.initialX;
 
-                    		// Store whether or not any of the cells' bounds were unavailable so
+                            // Store whether or not any of the cells' bounds were unavailable so
                     // to only issue the warning once for all cells
                     var boundsWarning = false;
 
@@ -32810,7 +32783,6 @@ mxMedianHybridCrossingReduction.prototype.medianValue = function (connectedCells
                                         // Get the connecting edge
                                         if (k == 0) {
                                             connections = cell.connectsAsSource;
-
                                         } else {
                                             connections = cell.connectsAsTarget;
                                         }
@@ -33757,7 +33729,6 @@ mxMedianHybridCrossingReduction.prototype.medianValue = function (connectedCells
                     // If the candidate root is an unconnected group cell, remove it from
                     // the layout. We may need a custom set that holds such groups and forces
                     // them to be processed for resizing and/or moving.
-
 
                     for (var i = 0; i < candidateRoots.length; i++) {
                         var vertexSet = Object();
@@ -38465,7 +38436,6 @@ mxMedianHybridCrossingReduction.prototype.medianValue = function (connectedCells
          * Copyright (c) 2006-2015, Gaudenz Alder
          */
         var mxCellPath = {
-
             /**
              * Class: mxCellPath
              *
@@ -38599,7 +38569,6 @@ mxMedianHybridCrossingReduction.prototype.medianValue = function (connectedCells
 
                 return comp;
             }
-
         };
         /**
          * Copyright (c) 2006-2015, JGraph Ltd
@@ -39104,7 +39073,6 @@ mxMedianHybridCrossingReduction.prototype.medianValue = function (connectedCells
                                 b = new mxPoint(x, y + Math.floor(1.25 * h));
                             }
                         }
-
                     } else {
                         //Special cases where intersects with hexagon corners
                         if (py == cy) {
@@ -42310,7 +42278,6 @@ mxMedianHybridCrossingReduction.prototype.medianValue = function (connectedCells
                 }
 
                 this.textarea = null;
-
             }
 
             if (this.changeHandler != null) {
@@ -43088,7 +43055,6 @@ mxMedianHybridCrossingReduction.prototype.medianValue = function (connectedCells
                 // Forced is true if the style has changed, so to get the updated
                 // result in getLabelBounds we apply the new style to the shape
                 if (forced) {
-
                     // Checks if a full repaint is needed
                     if (state.text.lastValue != null && this.isTextShapeInvalid(state, state.text)) {
                         // Forces a full repaint
@@ -44765,7 +44731,6 @@ mxMedianHybridCrossingReduction.prototype.medianValue = function (connectedCells
                     prefOrdering[1][0] = vertPref[1];
                     prefOrdering[1][1] = horPref[1];
                     preferredOrderSet = true;
-
                 }
 
                 if (preferredHorizDist > 0 && !preferredOrderSet) {
@@ -44977,7 +44942,7 @@ mxMedianHybridCrossingReduction.prototype.medianValue = function (connectedCells
                     }
 
                     result.push(new mxPoint(Math.round(mxEdgeStyle.wayPoints1[i][0]), Math.round(mxEdgeStyle.wayPoints1[i][1])));
-                }
+                    }
 
                 // Removes duplicates
                 var index = 1;
@@ -45068,7 +45033,6 @@ mxMedianHybridCrossingReduction.prototype.medianValue = function (connectedCells
 
                 return null;
             }
-
         };
 
         mxStyleRegistry.putValue(mxConstants.EDGESTYLE_ELBOW, mxEdgeStyle.ElbowConnector);
@@ -46988,25 +46952,23 @@ mxMedianHybridCrossingReduction.prototype.medianValue = function (connectedCells
                     } else {
                         projlenSq = dotprod * dotprod
                             / (xSegment * xSegment + ySegment * ySegment);
-                            			}
+                                        }
 
-                            			var projlen = Math.sqrt(projlenSq);
+                                        var projlen = Math.sqrt(projlenSq);
 
-                            			if (projlen > seg)
-                            			{
-                            				projlen = seg;
-                            			}
+                                        if (projlen > seg) {
+                                            projlen = seg;
+                                        }
 
-                            			var yDistance = Math.sqrt(mxUtils.ptSegDistSq(p0.x, p0.y, pe
-                            					.x, pe.y, x, y));
-                            			var direction = mxUtils.relativeCcw(p0.x, p0.y, pe.x, pe.y, x, y);
+                                        var yDistance = Math.sqrt(mxUtils.ptSegDistSq(p0.x, p0.y, pe
+                                            .x, pe.y, x, y));
+                                        var direction = mxUtils.relativeCcw(p0.x, p0.y, pe.x, pe.y, x, y);
 
-                            			if (direction == -1)
-                            			{
-                            				yDistance = -yDistance;
-                            			}
+                                        if (direction == -1) {
+                                            yDistance = -yDistance;
+                                        }
 
-                            			/ / Constructs the relative point for the label
+                                        / / Constructs the relative point for the label
                             return new mxPoint(((totalLength / 2 - length - projlen) / totalLength) * -2,
                                 yDistance / this.scale);
                     }
@@ -74333,7 +74295,6 @@ mxMedianHybridCrossingReduction.prototype.medianValue = function (connectedCells
                 });
 
                 this.addAction('alignFontLeft', function (editor) {
-
                     editor.graph.setCellStyles(
                         mxConstants.STYLE_ALIGN,
                         mxConstants.ALIGN_LEFT);
@@ -76016,7 +75977,6 @@ mxMedianHybridCrossingReduction.prototype.medianValue = function (connectedCells
 
                     return codec;
                 }
-
             };
             /**
              * Copyright (c) 2006-2015, JGraph Ltd
@@ -77046,8 +77006,7 @@ mxMedianHybridCrossingReduction.prototype.medianValue = function (connectedCells
             mxObjectCodec.prototype.writeAttribute = function (enc, obj, name, value, node) {
                 if (typeof(value) != 'object' /* primitive type */) {
                     this.writePrimitiveAttribute(enc, obj, name, value, node);
-                } else /* complex type */
-                {
+                } else /* complex type */ {
                     this.writeComplexAttribute(enc, obj, name, value, node);
                 }
             };
@@ -77717,7 +77676,6 @@ mxMedianHybridCrossingReduction.prototype.medianValue = function (connectedCells
 
                 // Returns the codec into the registry
                 return codec;
-
             }
                 ());
             /**
@@ -77787,7 +77745,6 @@ mxMedianHybridCrossingReduction.prototype.medianValue = function (connectedCells
 
                 // Returns the codec into the registry
                 return codec;
-
             }
                 ());
             /**
@@ -77864,7 +77821,6 @@ mxMedianHybridCrossingReduction.prototype.medianValue = function (connectedCells
 
                 // Returns the codec into the registry
                 return codec;
-
             }
                 ());
             /**
@@ -77998,7 +77954,6 @@ mxMedianHybridCrossingReduction.prototype.medianValue = function (connectedCells
 
                 // Returns the codec into the registry
                 return codec;
-
             }
                 ());
             /**
@@ -78039,7 +77994,6 @@ mxMedianHybridCrossingReduction.prototype.medianValue = function (connectedCells
 
                 // Returns the codec into the registry
                 return codec;
-
             }
                 ());
             /**
@@ -78128,7 +78082,6 @@ mxMedianHybridCrossingReduction.prototype.medianValue = function (connectedCells
                 return new mxObjectCodec(new mxGraph(),
                     ['graphListeners', 'eventListeners', 'view', 'container',
                         'cellRenderer', 'editor', 'selection']);
-
             }
                 ());
             /**
@@ -78295,7 +78248,6 @@ mxMedianHybridCrossingReduction.prototype.medianValue = function (connectedCells
 
                 // Returns the codec into the registry
                 return codec;
-
             }
                 ());
             /**
@@ -78474,7 +78426,6 @@ mxMedianHybridCrossingReduction.prototype.medianValue = function (connectedCells
 
                     // Returns the codec into the registry
                     return codec;
-
                 }
                     ());
 
@@ -78565,7 +78516,6 @@ mxMedianHybridCrossingReduction.prototype.medianValue = function (connectedCells
 
                 // Returns the codec into the registry
                 return codec;
-
             }
                 ());
             /**
@@ -78798,7 +78748,6 @@ mxMedianHybridCrossingReduction.prototype.medianValue = function (connectedCells
                                                                 option.cellStyle = child.getAttribute('style');
                                                             }
                                                         }
-
                                                     }
                                                 }
                                             }
@@ -78824,7 +78773,6 @@ mxMedianHybridCrossingReduction.prototype.medianValue = function (connectedCells
 
                     // Returns the codec into the registry
                     return codec;
-
                 }
                     ());
 
@@ -78882,7 +78830,6 @@ mxMedianHybridCrossingReduction.prototype.medianValue = function (connectedCells
 
                 // Returns the codec into the registry
                 return codec;
-
             }
                 ());
             /**
@@ -79093,6 +79040,5 @@ mxMedianHybridCrossingReduction.prototype.medianValue = function (connectedCells
 
                 // Returns the codec into the registry
                 return codec;
-
             }
                 ());
