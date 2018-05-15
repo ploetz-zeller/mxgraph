@@ -17396,6 +17396,8 @@ mxSvgCanvas2D.prototype.setLink = function (link) {
         } else {
             node.setAttributeNS(mxConstants.NS_XLINK, 'xlink:href', link);
         }
+        // P+Z: Set all pointer events for links
+        node.style.pointerEvents = "all";
 
         this.root.appendChild(node);
         this.root = node;
@@ -17572,7 +17574,8 @@ mxSvgCanvas2D.prototype.image = function (x, y, w, h, src, aspect, flipH, flipV)
     }
 
     if (!this.pointerEvents) {
-        node.setAttribute('pointer-events', 'none');
+        // P+Z change
+        //node.setAttribute('pointer-events', 'none');
     }
 
     this.root.appendChild(node);
@@ -22570,6 +22573,8 @@ function mxPolyline(points, stroke, strokewidth) {
     mxShape.call(this);
     this.points = points;
     this.stroke = stroke;
+    // P+Z: Set default file color to #000000 for polylines
+    this.fill = '#000000';
     this.strokewidth = (strokewidth != null) ? strokewidth : 1;
 };
 
@@ -44941,8 +44946,22 @@ mxMedianHybridCrossingReduction.prototype.medianValue = function (connectedCells
                         }
                     }
 
-                    result.push(new mxPoint(Math.round(mxEdgeStyle.wayPoints1[i][0]), Math.round(mxEdgeStyle.wayPoints1[i][1])));
+                    // P+Z: 2017-08-31: Epsilon comparison with previous way point to ensure edge smoothing
+                    var x = Math.round(mxEdgeStyle.wayPoints1[i][0]);
+                    var y = Math.round(mxEdgeStyle.wayPoints1[i][1]);
+
+                    if (result.length > 0 && result[result.length - 1] != null) {
+                        deltaX = Math.abs(mxEdgeStyle.wayPoints1[i][0] - result[result.length - 1].x);
+                        deltaY = Math.abs(mxEdgeStyle.wayPoints1[i][1] - result[result.length - 1].y);
+                        if (deltaX < 1)
+                            x = result[result.length - 1].x;
+                        if (deltaY < 1)
+                            y = result[result.length - 1].y;
                     }
+
+                    result.push(new mxPoint(x, y));
+                    // result.push(new mxPoint(Math.round(mxEdgeStyle.wayPoints1[i][0]), Math.round(mxEdgeStyle.wayPoints1[i][1])));
+                }
 
                 // Removes duplicates
                 var index = 1;
