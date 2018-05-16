@@ -2152,6 +2152,7 @@ EditorUi.prototype.addBeforeUnloadListener = function()
 	// This must be disabled during save and image export
 	window.onbeforeunload = mxUtils.bind(this, function()
 	{
+        PZ.Sy.Std.UI.toggleLoadingBar(false);
 		if (!this.editor.chromeless)
 		{
 			return this.onBeforeUnload();

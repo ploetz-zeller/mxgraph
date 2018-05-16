@@ -419,9 +419,11 @@ Format.prototype.refresh = function()
 					{
 						currentLabel.style.backgroundColor = this.inactiveTabBackgroundColor;
 						currentLabel.style.borderBottomWidth = '1px';
+                        currentLabel.className = "PZ-geFormatButton";
 					}
 	
 					currentLabel = elt;
+                    currentLabel.className = "PZ-geFormatButton-Selected";
 					currentLabel.style.backgroundColor = '';
 					currentLabel.style.borderBottomWidth = '0px';
 					
@@ -449,6 +451,7 @@ Format.prototype.refresh = function()
 		
 		var idx = 0;
 
+        label.className = "PZ-geFormatButton";
 		label.style.backgroundColor = this.inactiveTabBackgroundColor;
 		label.style.borderLeftWidth = '1px';
 		label.style.width = (containsLabel) ? '50%' : '33.3%';
@@ -1075,7 +1078,7 @@ BaseFormatPanel.prototype.createColorOption = function(label, getColorFn, setCol
 	btn.style.marginTop = '-4px';
 	btn.style.right = (mxClient.IS_QUIRKS) ? '0px' : '20px';
 	btn.style.height = '22px';
-	btn.className = 'geColorBtn';
+    btn.className = 'PZ-Button ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only';
 	btn.style.display = (cb.checked || hideCheckbox) ? '' : 'none';
 	div.appendChild(btn);
 
@@ -1402,8 +1405,7 @@ BaseFormatPanel.prototype.styleButtons = function(elts)
 		elts[i].style.margin = '1px';
 		elts[i].style.width = '24px';
 		elts[i].style.height = '20px';
-		elts[i].className += ' geColorBtn';
-	}
+        elts[i].className += ' PZ-geFormatButton PZ-Button ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only';	}
 };
 
 /**
@@ -1605,6 +1607,15 @@ ArrangePanel.prototype.addGroupOps = function(div)
 		btn.style.marginBottom = '2px';
 		div.appendChild(btn);
 		count++;
+
+        mxUtils.br(div);
+        btn = mxUtils.button(mxResources.get('pzEditReference'), mxUtils.bind(this, function (evt) {
+            this.editorUi.actions.get('pzEditReference').funct();
+        }));
+        btn.style.width = '202px';
+        btn.style.marginBottom = '2px';
+        div.appendChild(btn);
+        count++;
 	}
 	
 	if (count == 0)
@@ -3735,7 +3746,7 @@ StyleFormatPanel.prototype.addEditOps = function(div)
 	{
 		var btn2 = mxUtils.button(mxResources.get('editImage'), mxUtils.bind(this, function(evt)
 		{
-			this.editorUi.actions.get('image').funct();
+			this.editorUi.actions.get('pzAddImage').funct();
 		}));
 		
 		btn2.setAttribute('title', mxResources.get('editImage'));
@@ -4913,7 +4924,7 @@ DiagramFormatPanel.prototype.addView = function(div)
 			})
 		
 			btn.style.position = 'absolute';
-			btn.className = 'geColorBtn';
+            btn.className = 'PZ-Button ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only';
 			btn.style.marginTop = '-4px';
 			btn.style.paddingBottom = (document.documentMode == 11 || mxClient.IS_MT) ? '0px' : '2px';
 			btn.style.height = '22px';

@@ -22,7 +22,7 @@ function Sidebar(editorUi, container)
 		this.showTooltips = true;
 	});
 
-	mxEvent.addListener(document, (mxClient.IS_POINTER) ? 'pointerup' : 'mouseup', this.pointerUpHandler);
+    mxEvent.addListener(document, 'mouseup', this.pointerUpHandler); // P+Z(mxClient.IS_POINTER) ? 'MSPointerUp' : 'mouseup', this.pointerUpHandler);
 
 	this.pointerDownHandler = mxUtils.bind(this, function()
 	{
@@ -30,7 +30,7 @@ function Sidebar(editorUi, container)
 		this.hideTooltip();
 	});
 	
-	mxEvent.addListener(document, (mxClient.IS_POINTER) ? 'pointerdown' : 'mousedown', this.pointerDownHandler);
+    mxEvent.addListener(document, 'mousedown', this.pointerDownHandler); // P+Z (mxClient.IS_POINTER) ? 'MSPointerDown' : 'mousedown', this.pointerDownHandler);
 	
 	this.pointerMoveHandler = mxUtils.bind(this, function(evt)
 	{
@@ -49,7 +49,7 @@ function Sidebar(editorUi, container)
 		this.hideTooltip();
 	});
 
-	mxEvent.addListener(document, (mxClient.IS_POINTER) ? 'pointermove' : 'mousemove', this.pointerMoveHandler);
+    mxEvent.addListener(document, 'mousemove', this.pointerMoveHandler); // P+Z (mxClient.IS_POINTER) ? 'MSPointerMove' : 'mousemove', this.pointerMoveHandler);
 
 	// Handles mouse leaving the window
 	this.pointerOutHandler = mxUtils.bind(this, function(evt)
@@ -60,7 +60,7 @@ function Sidebar(editorUi, container)
 		}
 	});
 	
-	mxEvent.addListener(document, (mxClient.IS_POINTER) ? 'pointerout' : 'mouseout', this.pointerOutHandler);
+    mxEvent.addListener(document, 'mouseout', this.pointerOutHandler); // P+Z (mxClient.IS_POINTER) ? 'MSPointerOut' : 'mouseout', this.pointerOutHandler);
 
 	// Enables tooltips after scroll
 	mxEvent.addListener(container, 'scroll', mxUtils.bind(this, function()

@@ -171,6 +171,15 @@ Toolbar.prototype.init = function()
 
 	var insertMenu = this.addMenu('', mxResources.get('insert') + ' (' + mxResources.get('doubleClickTooltip') + ')', true, 'insert', null, true);
 	this.addDropDownArrow(insertMenu, 'geSprite-plus', 38, 48, -4, -3, 36, -8);
+
+    // Select
+	var selectMenu = this.addMenu('', mxResources.get('pzSelect'), true, 'pzSelect', null, true);
+	this.addDropDownArrow(selectMenu, 'geSprite-select', 38, 48, -4, -3, 36, -8);
+
+    // Layout
+	var layoutMenu = this.addMenu('', mxResources.get('layout'), true, 'layout', null, true);
+	this.addDropDownArrow(layoutMenu, 'geSprite-layout', 38, 48, -4, -3, 36, -8);
+
 };
 
 /**

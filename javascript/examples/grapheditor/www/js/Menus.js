@@ -432,7 +432,7 @@ Menus.prototype.init = function()
 	}))).isEnabled = isGraphEnabled;
 	this.put('insert', new Menu(mxUtils.bind(this, function(menu, parent)
 	{
-		this.addMenuItems(menu, ['insertLink', 'insertImage'], parent);
+		this.addMenuItems(menu, ['insertLink', 'pzAddImage'], parent);
 	})));
 	this.put('view', new Menu(mxUtils.bind(this, function(menu, parent)
 	{
@@ -476,7 +476,7 @@ Menus.prototype.init = function()
 	this.put('edit', new Menu(mxUtils.bind(this, function(menu, parent)
 	{
 		this.addMenuItems(menu, ['undo', 'redo', '-', 'cut', 'copy', 'paste', 'delete', '-', 'duplicate', '-',
-		                         'editData', 'editTooltip', 'editStyle', '-', 'edit', '-', 'editLink', 'openLink', '-',
+		                         'editData', 'editTooltip', 'editStyle', '-', 'edit', '-', 'editLink', 'openLink', '-', 'pzEditReference', '-',
 		                         'selectVertices', 'selectEdges', 'selectAll', 'selectNone', '-', 'lockUnlock']);
 	})));
 	this.put('extras', new Menu(mxUtils.bind(this, function(menu, parent)
@@ -487,6 +487,13 @@ Menus.prototype.init = function()
 	{
 		this.addMenuItems(menu, ['help', '-', 'about']);
 	})));
+
+    /*
+     * PZ
+     */
+    this.put('pzSelect', new Menu(mxUtils.bind(this, function (menu, parent) {
+        this.addMenuItems(menu, ['selectVertices', 'selectEdges', 'selectAll'], parent);
+    })));
 };
 
 /**
@@ -1072,13 +1079,13 @@ Menus.prototype.createPopupMenu = function(menu, cell, evt)
 			if (graph.getSelectionCount() == 1)
 			{
 				menu.addSeparator();
-				this.addMenuItems(menu, ['edit', '-', 'editData', 'editLink'], null, evt);
+				this.addMenuItems(menu, ['editLink', 'pzEditReference'], null, evt);
 
 				// Shows edit image action if there is an image in the style
 				if (graph.getModel().isVertex(cell) && mxUtils.getValue(state.style, mxConstants.STYLE_IMAGE, null) != null)
 				{
 					menu.addSeparator();
-					this.addMenuItem(menu, 'image', null, evt).firstChild.nextSibling.innerHTML = mxResources.get('editImage') + '...';
+					this.addMenuItem(menu, 'pzAddImage', null, evt).firstChild.nextSibling.innerHTML = mxResources.get('editImage') + '...';
 				}
 			}
 		}
