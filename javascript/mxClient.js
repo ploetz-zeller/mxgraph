@@ -16599,7 +16599,7 @@ mxXmlCanvas2D.prototype.close = function () {
  * rotation - Number that specifies the angle of the rotation around the anchor point of the text.
  * dir - Optional string that specifies the text direction. Possible values are rtl and lrt.
  */
-mxXmlCanvas2D.prototype.text = function (x, y, w, h, str, align, valign, wrap, format, overflow, clip, rotation, dir) {
+mxXmlCanvas2D.prototype.text = function (x, y, w, h, str, align, valign, wrap, format, overflow, clip, rotation, dir, displayValueSource) {
     if (this.textEnabled && str != null) {
         if (mxUtils.isNode(str)) {
             str = mxUtils.getOuterHtml(str);
@@ -16611,6 +16611,9 @@ mxXmlCanvas2D.prototype.text = function (x, y, w, h, str, align, valign, wrap, f
         elem.setAttribute('w', this.format(w));
         elem.setAttribute('h', this.format(h));
         elem.setAttribute('str', str);
+
+        if (displayValueSource)
+            elem.setAttribute('data-pz-display-value-source', displayValueSource);
 
         if (align != null) {
             elem.setAttribute('align', align);
@@ -17013,7 +17016,7 @@ mxSvgCanvas2D.prototype.createElement = function (tagName, namespace) {
  *
  * Returns the alternate content for the given foreignObject.
  */
-mxSvgCanvas2D.prototype.createAlternateContent = function (fo, x, y, w, h, str, align, valign, wrap, format, overflow, clip, rotation) {
+mxSvgCanvas2D.prototype.createAlternateContent = function (fo, x, y, w, h, str, align, valign, wrap, format, overflow, clip, rotation, displayValueSource) {
     if (this.foAltText != null) {
         var s = this.state;
         var alt = this.createElement('text');
@@ -17023,6 +17026,9 @@ mxSvgCanvas2D.prototype.createAlternateContent = function (fo, x, y, w, h, str, 
         alt.setAttribute('text-anchor', 'middle');
         alt.setAttribute('font-size', s.fontSize + 'px');
         alt.setAttribute('font-family', s.fontFamily);
+
+        if (displayValueSource)
+            alt.setAttribute('data-pz-display-value-source', displayValueSource);
 
         if ((s.fontStyle & mxConstants.FONT_BOLD) == mxConstants.FONT_BOLD) {
             alt.setAttribute('font-weight', 'bold');
@@ -17928,7 +17934,7 @@ mxSvgCanvas2D.prototype.updateText = function (x, y, w, h, align, valign, wrap, 
  * foreignObject is supported and <foEnabled> is true. (This means IE9 and later
  * does currently not support HTML text as part of shapes.)
  */
-mxSvgCanvas2D.prototype.text = function (x, y, w, h, str, align, valign, wrap, format, overflow, clip, rotation, dir) {
+mxSvgCanvas2D.prototype.text = function (x, y, w, h, str, align, valign, wrap, format, overflow, clip, rotation, dir, displayValueSource) {
     if (this.textEnabled && str != null) {
         rotation = (rotation != null) ? rotation : 0;
 
@@ -18200,7 +18206,7 @@ mxSvgCanvas2D.prototype.text = function (x, y, w, h, str, align, valign, wrap, f
 
             // Adds alternate content if foreignObject not supported in viewer
             if (this.root.ownerDocument != document) {
-                var alt = this.createAlternateContent(fo, x, y, w, h, str, align, valign, wrap, format, overflow, clip, rotation);
+                var alt = this.createAlternateContent(fo, x, y, w, h, str, align, valign, wrap, format, overflow, clip, rotation, displayValueSource);
 
                 if (alt != null) {
                     fo.setAttribute('requiredFeatures', 'http://www.w3.org/TR/SVG11/feature#Extensibility');
@@ -18211,7 +18217,7 @@ mxSvgCanvas2D.prototype.text = function (x, y, w, h, str, align, valign, wrap, f
                 }
             }
         } else {
-            this.plainText(x, y, w, h, str, align, valign, wrap, overflow, clip, rotation, dir);
+            this.plainText(x, y, w, h, str, align, valign, wrap, overflow, clip, rotation, dir, displayValueSource);
         }
     }
 };
@@ -18257,7 +18263,7 @@ mxSvgCanvas2D.prototype.createClip = function (x, y, w, h) {
  * Paints the given text. Possible values for format are empty string for
  * plain text and html for HTML markup.
  */
-mxSvgCanvas2D.prototype.plainText = function (x, y, w, h, str, align, valign, wrap, overflow, clip, rotation, dir) {
+mxSvgCanvas2D.prototype.plainText = function (x, y, w, h, str, align, valign, wrap, overflow, clip, rotation, dir, displayValueSource) {
     rotation = (rotation != null) ? rotation : 0;
     var s = this.state;
     var size = s.fontSize;
@@ -18363,6 +18369,9 @@ mxSvgCanvas2D.prototype.plainText = function (x, y, w, h, str, align, valign, wr
             // LATER: Match horizontal HTML alignment
             text.setAttribute('x', this.format(x * s.scale) + this.textOffset);
             text.setAttribute('y', this.format(cy * s.scale) + this.textOffset);
+
+            if (displayValueSource)
+                text.setAttribute('data-pz-display-value-source', displayValueSource);
 
             mxUtils.write(text, lines[i]);
             node.appendChild(text);
@@ -19105,7 +19114,7 @@ mxVmlCanvas2D.prototype.createDiv = function (str, align, valign, overflow) {
  * text and html for HTML markup. Clipping, text background and border are not
  * supported for plain text in VML.
  */
-mxVmlCanvas2D.prototype.text = function (x, y, w, h, str, align, valign, wrap, format, overflow, clip, rotation, dir) {
+mxVmlCanvas2D.prototype.text = function (x, y, w, h, str, align, valign, wrap, format, overflow, clip, rotation, dir, displayValueSource) {
     if (this.textEnabled && str != null) {
         var s = this.state;
 
@@ -19367,7 +19376,7 @@ mxVmlCanvas2D.prototype.text = function (x, y, w, h, str, align, valign, wrap, f
                 box.style.top = (dy * 100) + '%';
             }
         } else {
-            this.plainText(x, y, w, h, mxUtils.htmlEntities(str, false), align, valign, wrap, format, overflow, clip, rotation, dir);
+            this.plainText(x, y, w, h, mxUtils.htmlEntities(str, false), align, valign, wrap, format, overflow, clip, rotation, dir, displayValueSource);
         }
     }
 };
@@ -19377,7 +19386,7 @@ mxVmlCanvas2D.prototype.text = function (x, y, w, h, str, align, valign, wrap, f
  *
  * Paints the outline of the current path.
  */
-mxVmlCanvas2D.prototype.plainText = function (x, y, w, h, str, align, valign, wrap, format, overflow, clip, rotation, dir) {
+mxVmlCanvas2D.prototype.plainText = function (x, y, w, h, str, align, valign, wrap, format, overflow, clip, rotation, dir, displayValueSource) {
     // TextDirection is ignored since this code is not used (format is always HTML in the text function)
     var s = this.state;
     x = (x + s.dx) * s.scale;
@@ -20419,11 +20428,13 @@ mxStencil.prototype.drawNode = function (canvas, shape, node, aspect, disableSha
 
             rotation -= node.getAttribute('rotation');
 
+            var displayValueSource = node.getAttribute('data-pz-display-value-source');
+
             canvas.text(x0 + Number(node.getAttribute('x')) * sx,
                 y0 + Number(node.getAttribute('y')) * sy,
                 0, 0, str, node.getAttribute('align') || 'left',
                 node.getAttribute('valign') || 'top', false, '',
-                null, false, rotation);
+                null, false, rotation, null, displayValueSource);
         }
     } else if (name == 'include-shape') {
         var stencil = mxStencilRegistry.getStencil(node.getAttribute('name'));
@@ -23519,8 +23530,12 @@ mxText.prototype.paint = function (c, update) {
             dir = null;
         }
 
+        var displayValueSource = this.state && this.state.cell && this.state.cell['data-pz-display-value-source']
+            ? this.state.cell['data-pz-display-value-source']
+            : null;
+
         c.text(x, y, w, h, val, this.align, this.valign, this.wrap, fmt, this.overflow,
-            this.clipped, this.getTextRotation(), dir);
+            this.clipped, this.getTextRotation(), dir, displayValueSource);
     }
 
     // Needs to invalidate the cached offset widths if the geometry changes
@@ -47137,8 +47152,8 @@ mxGraphView.prototype.getRelativePoint = function (edgeState, x, y) {
             }
 
             // Constructs the relative point for the label
-                            return new mxPoint(((totalLength / 2 - length - projlen) / totalLength) * -2,
-                    yDistance / this.scale);
+            return new mxPoint(((totalLength / 2 - length - projlen) / totalLength) * -2,
+                yDistance / this.scale);
         }
     }
 
