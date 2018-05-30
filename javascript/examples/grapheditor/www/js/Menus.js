@@ -51,15 +51,15 @@ Menus.prototype.init = function () {
             var tr = this.styleChange(menu, fontname, [mxConstants.STYLE_FONTFAMILY], [fontname], null, parent, function () {
                 document.execCommand('fontname', false, fontname);
             }, function () {
-                    graph.updateLabelElements(graph.getSelectionCells(), function (elt) {
-                        elt.removeAttribute('face');
-                        elt.style.fontFamily = null;
+                graph.updateLabelElements(graph.getSelectionCells(), function (elt) {
+                    elt.removeAttribute('face');
+                    elt.style.fontFamily = null;
 
-                        if (elt.nodeName == 'PRE') {
-                            graph.replaceElement(elt, 'div');
-                        }
-                    });
+                    if (elt.nodeName == 'PRE') {
+                        graph.replaceElement(elt, 'div');
+                    }
                 });
+            });
             tr.firstChild.nextSibling.style.fontFamily = fontname;
         });
 
@@ -392,7 +392,7 @@ Menus.prototype.init = function () {
     })));
     this.put('edit', new Menu(mxUtils.bind(this, function (menu, parent) {
         this.addMenuItems(menu, ['undo', 'redo', '-', 'cut', 'copy', 'paste', 'delete', '-', 'duplicate', '-',
-            'editData', 'editTooltip', 'editStyle', '-', 'edit', '-', 'editLink', 'openLink', '-', 'pzEditReference', '-',
+            'editData', 'editTooltip', 'editStyle', '-', 'edit', '-', 'editLink', 'openLink', '-', 'pzEditReference', 'pzEditFreeText', '-',
             'selectVertices', 'selectEdges', 'selectAll', 'selectNone', '-', 'lockUnlock']);
     })));
     this.put('extras', new Menu(mxUtils.bind(this, function (menu, parent) {
@@ -738,8 +738,8 @@ Menus.prototype.pickColor = function (key, cmd, defaultValue) {
             graph.cellEditor.restoreSelection(selState);
             document.execCommand(cmd, false, (color != mxConstants.NONE) ? color : 'transparent');
         }), function () {
-                graph.cellEditor.restoreSelection(selState);
-            });
+            graph.cellEditor.restoreSelection(selState);
+        });
         this.editorUi.showDialog(dlg.container, 230, 430, true, true);
         dlg.init();
     }
@@ -900,8 +900,23 @@ Menus.prototype.createPopupMenu = function (menu, cell, evt) {
 
             if (graph.getSelectionCount() == 1) {
                 menu.addSeparator();
-                this.addMenuItems(menu, ['editLink', 'pzEditReference'], null, evt);
-                this.addMenuItems(menu, ['editFreeText', 'pzEditFreeText'], null, evt);
+
+                var attribute = "";
+                if (cell['data-pz-display-value-source']) {
+                    var parts = cell['data-pz-display-value-source'].split(":")
+                    attribute = parts[0];
+                } else if (cell['data-pz-reference-marker']) {
+                    attribute = cell['data-pz-reference-marker'];
+                }
+
+                if (attribute == "ATX_FREE_TEXT") // Symbio Text element
+                    this.addMenuItems(menu, ['pzEditFreeText'], null, evt);
+                else if (attribute == "data-pz-reference-marker") // Symbio Link element
+                    this.addMenuItems(menu, ['pzEditReference'], null, evt);
+                else if (attribute == "") // MxGraph element
+                    this.addMenuItems(menu, ['editLink'], null, evt);
+
+                // else: Symbio pre-rendered shape ==> don't show edit possibilities for that
 
                 // Shows edit image action if there is an image in the style
                 if (graph.getModel().isVertex(cell) && mxUtils.getValue(state.style, mxConstants.STYLE_IMAGE, null) != null) {

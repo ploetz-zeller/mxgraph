@@ -16599,7 +16599,7 @@ mxXmlCanvas2D.prototype.close = function () {
  * rotation - Number that specifies the angle of the rotation around the anchor point of the text.
  * dir - Optional string that specifies the text direction. Possible values are rtl and lrt.
  */
-mxXmlCanvas2D.prototype.text = function (x, y, w, h, str, align, valign, wrap, format, overflow, clip, rotation, dir, displayValueSource) {
+mxXmlCanvas2D.prototype.text = function (x, y, w, h, str, align, valign, wrap, format, overflow, clip, rotation, dir, displayValueSource, referenceMarker) {
     if (this.textEnabled && str != null) {
         if (mxUtils.isNode(str)) {
             str = mxUtils.getOuterHtml(str);
@@ -16614,6 +16614,9 @@ mxXmlCanvas2D.prototype.text = function (x, y, w, h, str, align, valign, wrap, f
 
         if (displayValueSource)
             elem.setAttribute('data-pz-display-value-source', displayValueSource);
+
+        if (referenceMarker)
+            elem.setAttribute('data-pz-reference-marker', referenceMarker);
 
         if (align != null) {
             elem.setAttribute('align', align);
@@ -17016,7 +17019,7 @@ mxSvgCanvas2D.prototype.createElement = function (tagName, namespace) {
  *
  * Returns the alternate content for the given foreignObject.
  */
-mxSvgCanvas2D.prototype.createAlternateContent = function (fo, x, y, w, h, str, align, valign, wrap, format, overflow, clip, rotation, displayValueSource) {
+mxSvgCanvas2D.prototype.createAlternateContent = function (fo, x, y, w, h, str, align, valign, wrap, format, overflow, clip, rotation, displayValueSource, referenceMarker) {
     if (this.foAltText != null) {
         var s = this.state;
         var alt = this.createElement('text');
@@ -17029,6 +17032,9 @@ mxSvgCanvas2D.prototype.createAlternateContent = function (fo, x, y, w, h, str, 
 
         if (displayValueSource)
             alt.setAttribute('data-pz-display-value-source', displayValueSource);
+
+        if (referenceMarker)
+            alt.setAttribute('data-pz-reference-marker', referenceMarker);
 
         if ((s.fontStyle & mxConstants.FONT_BOLD) == mxConstants.FONT_BOLD) {
             alt.setAttribute('font-weight', 'bold');
@@ -17934,7 +17940,7 @@ mxSvgCanvas2D.prototype.updateText = function (x, y, w, h, align, valign, wrap, 
  * foreignObject is supported and <foEnabled> is true. (This means IE9 and later
  * does currently not support HTML text as part of shapes.)
  */
-mxSvgCanvas2D.prototype.text = function (x, y, w, h, str, align, valign, wrap, format, overflow, clip, rotation, dir, displayValueSource) {
+mxSvgCanvas2D.prototype.text = function (x, y, w, h, str, align, valign, wrap, format, overflow, clip, rotation, dir, displayValueSource, referenceMarker) {
     if (this.textEnabled && str != null) {
         rotation = (rotation != null) ? rotation : 0;
 
@@ -17977,6 +17983,11 @@ mxSvgCanvas2D.prototype.text = function (x, y, w, h, str, align, valign, wrap, f
             fo.setAttribute('pointer-events', 'all');
 
             var div = this.createDiv(str, align, valign, style, overflow);
+            if (displayValueSource)
+                div.setAttribute('data-pz-display-value-source', displayValueSource);
+
+            if (referenceMarker)
+                div.setAttribute('data-pz-reference-marker', referenceMarker);
 
             // Ignores invalid XHTML labels
             if (div == null) {
@@ -18206,7 +18217,7 @@ mxSvgCanvas2D.prototype.text = function (x, y, w, h, str, align, valign, wrap, f
 
             // Adds alternate content if foreignObject not supported in viewer
             if (this.root.ownerDocument != document) {
-                var alt = this.createAlternateContent(fo, x, y, w, h, str, align, valign, wrap, format, overflow, clip, rotation, displayValueSource);
+                var alt = this.createAlternateContent(fo, x, y, w, h, str, align, valign, wrap, format, overflow, clip, rotation, displayValueSource, referenceMarker);
 
                 if (alt != null) {
                     fo.setAttribute('requiredFeatures', 'http://www.w3.org/TR/SVG11/feature#Extensibility');
@@ -18217,7 +18228,7 @@ mxSvgCanvas2D.prototype.text = function (x, y, w, h, str, align, valign, wrap, f
                 }
             }
         } else {
-            this.plainText(x, y, w, h, str, align, valign, wrap, overflow, clip, rotation, dir, displayValueSource);
+            this.plainText(x, y, w, h, str, align, valign, wrap, overflow, clip, rotation, dir, displayValueSource, referenceMarker);
         }
     }
 };
@@ -18263,7 +18274,7 @@ mxSvgCanvas2D.prototype.createClip = function (x, y, w, h) {
  * Paints the given text. Possible values for format are empty string for
  * plain text and html for HTML markup.
  */
-mxSvgCanvas2D.prototype.plainText = function (x, y, w, h, str, align, valign, wrap, overflow, clip, rotation, dir, displayValueSource) {
+mxSvgCanvas2D.prototype.plainText = function (x, y, w, h, str, align, valign, wrap, overflow, clip, rotation, dir, displayValueSource, referenceMarker) {
     rotation = (rotation != null) ? rotation : 0;
     var s = this.state;
     var size = s.fontSize;
@@ -18372,6 +18383,9 @@ mxSvgCanvas2D.prototype.plainText = function (x, y, w, h, str, align, valign, wr
 
             if (displayValueSource)
                 text.setAttribute('data-pz-display-value-source', displayValueSource);
+
+            if (referenceMarker)
+                text.setAttribute('data-pz-reference-marker', referenceMarker)
 
             mxUtils.write(text, lines[i]);
             node.appendChild(text);
@@ -19114,7 +19128,7 @@ mxVmlCanvas2D.prototype.createDiv = function (str, align, valign, overflow) {
  * text and html for HTML markup. Clipping, text background and border are not
  * supported for plain text in VML.
  */
-mxVmlCanvas2D.prototype.text = function (x, y, w, h, str, align, valign, wrap, format, overflow, clip, rotation, dir, displayValueSource) {
+mxVmlCanvas2D.prototype.text = function (x, y, w, h, str, align, valign, wrap, format, overflow, clip, rotation, dir, displayValueSource, referenceMarker) {
     if (this.textEnabled && str != null) {
         var s = this.state;
 
@@ -19376,7 +19390,7 @@ mxVmlCanvas2D.prototype.text = function (x, y, w, h, str, align, valign, wrap, f
                 box.style.top = (dy * 100) + '%';
             }
         } else {
-            this.plainText(x, y, w, h, mxUtils.htmlEntities(str, false), align, valign, wrap, format, overflow, clip, rotation, dir, displayValueSource);
+            this.plainText(x, y, w, h, mxUtils.htmlEntities(str, false), align, valign, wrap, format, overflow, clip, rotation, dir, displayValueSource, referenceMarker);
         }
     }
 };
@@ -19386,7 +19400,7 @@ mxVmlCanvas2D.prototype.text = function (x, y, w, h, str, align, valign, wrap, f
  *
  * Paints the outline of the current path.
  */
-mxVmlCanvas2D.prototype.plainText = function (x, y, w, h, str, align, valign, wrap, format, overflow, clip, rotation, dir, displayValueSource) {
+mxVmlCanvas2D.prototype.plainText = function (x, y, w, h, str, align, valign, wrap, format, overflow, clip, rotation, dir, displayValueSource, referenceMarker) {
     // TextDirection is ignored since this code is not used (format is always HTML in the text function)
     var s = this.state;
     x = (x + s.dx) * s.scale;
@@ -20429,12 +20443,13 @@ mxStencil.prototype.drawNode = function (canvas, shape, node, aspect, disableSha
             rotation -= node.getAttribute('rotation');
 
             var displayValueSource = node.getAttribute('data-pz-display-value-source');
+            var referenceMarker = node.getAttribute('data-pz-reference-marker');
 
             canvas.text(x0 + Number(node.getAttribute('x')) * sx,
                 y0 + Number(node.getAttribute('y')) * sy,
                 0, 0, str, node.getAttribute('align') || 'left',
                 node.getAttribute('valign') || 'top', false, '',
-                null, false, rotation, null, displayValueSource);
+                null, false, rotation, null, displayValueSource, referenceMarker);
         }
     } else if (name == 'include-shape') {
         var stencil = mxStencilRegistry.getStencil(node.getAttribute('name'));
@@ -23534,8 +23549,17 @@ mxText.prototype.paint = function (c, update) {
             ? this.state.cell['data-pz-display-value-source']
             : null;
 
+        var referenceMarker = this.state && this.state.cell && this.state.cell['data-pz-reference-marker']
+            ? this.state.cell['data-pz-reference-marker']
+            : null;
+
+        if (referenceMarker && !displayValueSource) {
+            var value = this.state.cell.value;
+            displayValueSource = value && value.getAttribute ? value.getAttribute('data-pz-display-value-source') : null;
+        }
+
         c.text(x, y, w, h, val, this.align, this.valign, this.wrap, fmt, this.overflow,
-            this.clipped, this.getTextRotation(), dir, displayValueSource);
+            this.clipped, this.getTextRotation(), dir, displayValueSource, referenceMarker);
     }
 
     // Needs to invalidate the cached offset widths if the geometry changes
