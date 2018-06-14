@@ -87,6 +87,7 @@ Sidebar.prototype.init = function()
 
 	this.addSearchPalette(true);
 	this.addGeneralPalette(true);
+	// P+Z: Deactivated palettes
 	//this.addMiscPalette(false);
 	//this.addAdvancedPalette(false);
 	//this.addBasicPalette(dir);

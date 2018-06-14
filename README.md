@@ -35,6 +35,37 @@ We created mxGraph in 2005 as a commercial project and it ran through to 2016 th
 
 Changes by Ploetz + Zeller GmbH
 ===============================
+
+.jsbeautifyrc
+- Added formatter configuration to ensure correct tab indentation and expanded braces styling formats
+
+mxClient.js
 - Change pointer-events for links, add all, remove none
 - Set default fill for polylines
 - Add epsilon comparison for edge smoothing
+
+EditorUI.js
+- Set menubar height to 0
+- Deactivate menubar
+
+Format.js
+- Remove width for inner div in color button
+- Set width for color button to 45px
+
+Menus.js
+- Use P+Z custom image upload dialog for Insert dropdown to toolbar
+- Add Edit FreeText to context menu only when P+Z custom free text shapes are selected
+- Add Edit Reference to context menu only when P+Z custom link shapes are selected 
+- Add Add Image to context menu only when images are selected 
+
+Sidebar.js
+- Deactivated (uncommented) some palettes
+- Don't use MSPointer events
+- Specified toolbar offset to 150px
+- Set correct toolbar offset and toolbar image offset
+
+Toolbar.js
+- Added Selection menu and layout menu to toolbar
+
+grapheditor.txt and grapheditor_de.txt
+- Added P+Z custom localizations
