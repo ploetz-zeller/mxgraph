@@ -550,14 +550,19 @@ Menus.prototype.get = function(name)
 /**
  * Adds the given submenu.
  */
-Menus.prototype.addSubmenu = function(name, menu, parent)
+Menus.prototype.addSubmenu = function(name, menu, parent, label)
 {
-	var enabled = this.get(name).isEnabled();
-
-	if (menu.showDisabled || enabled)
+	var entry = this.get(name);
+	
+	if (entry != null)
 	{
-		var submenu = menu.addItem(mxResources.get(name), null, null, parent, null, enabled);
-		this.addMenu(name, menu, submenu);
+		var enabled = entry.isEnabled();
+	
+		if (menu.showDisabled || enabled)
+		{
+			var submenu = menu.addItem(label || mxResources.get(name), null, null, parent, null, enabled);
+			this.addMenu(name, menu, submenu);
+		}
 	}
 };
 
@@ -973,13 +978,13 @@ Menus.prototype.toggleStyle = function(key, defaultValue)
 /**
  * Creates the keyboard event handler for the current graph and history.
  */
-Menus.prototype.addMenuItem = function(menu, key, parent, trigger, sprite)
+Menus.prototype.addMenuItem = function(menu, key, parent, trigger, sprite, label)
 {
 	var action = this.editorUi.actions.get(key);
 
 	if (action != null && (menu.showDisabled || action.isEnabled()) && action.visible)
 	{
-		var item = menu.addItem(action.label, null, function()
+		var item = menu.addItem(label || action.label, null, function()
 		{
 			action.funct(trigger);
 		}, parent, sprite, action.isEnabled());
@@ -1083,9 +1088,11 @@ Menus.prototype.createPopupMenu = function(menu, cell, evt)
 
 					isWaypoint = index > 0 && index < handler.bends.length - 1;
 				}
-
-				this.addMenuItems(menu, ['-', (isWaypoint) ? 'removeWaypoint' : 'addWaypoint'], null, evt);
-
+				
+				menu.addSeparator();
+				this.addMenuItem(menu, 'turn', null, evt, null, mxResources.get('reverse'));
+				this.addMenuItems(menu, [(isWaypoint) ? 'removeWaypoint' : 'addWaypoint'], null, evt);
+				
 				// Adds reset waypoints option if waypoints exist
 				var geo = graph.getModel().getGeometry(cell);
 				hasWaypoints = geo != null && geo.points != null && geo.points.length > 0;
@@ -1178,18 +1185,20 @@ Menus.prototype.createMenubar = function(container)
 /**
  * Creates the keyboard event handler for the current graph and history.
  */
-Menus.prototype.menuCreated = function(menu, elt)
+Menus.prototype.menuCreated = function(menu, elt, className)
 {
 	if (elt != null)
 	{
+		className = (className != null) ? className : 'geItem';
+		
 		menu.addListener('stateChanged', function()
 		{
 			elt.enabled = menu.enabled;
 
 			if (!menu.enabled)
 			{
-				elt.className = 'geItem mxDisabled';
-
+				elt.className = className + ' mxDisabled';
+				
 				if (document.documentMode == 8)
 				{
 					elt.style.color = '#c3c3c3';
@@ -1197,8 +1206,8 @@ Menus.prototype.menuCreated = function(menu, elt)
 			}
 			else
 			{
-				elt.className = 'geItem';
-
+				elt.className = className;
+				
 				if (document.documentMode == 8)
 				{
 					elt.style.color = '';

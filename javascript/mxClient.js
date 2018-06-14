@@ -18,10 +18,10 @@ var mxClient = {
 	 * communicate versions of mxGraph use the following format.
 	 *
 	 * versionMajor.versionMinor.buildNumber.revisionNumber
-	 *
-	 * Current version is 3.9.3.
+	 * 
+	 * Current version is 3.9.6.
 	 */
-	VERSION: '3.9.3',
+	VERSION: '3.9.6',
 
 	/**
 	 * Variable: IS_IE
@@ -1321,10 +1321,10 @@ var mxResources = {
 	 * before loading mxClient.js and use <mxResources.loadResources> instead.
 	 *
 	 * Variable: resources
-	 *
-	 * Associative array that maps from keys to values.
+	 * 
+	 * Object that maps from keys to values.
 	 */
-	resources: [],
+	resources: {},
 
 	/**
 	 * Variable: extension
@@ -2801,27 +2801,33 @@ var mxUtils = {
 	 * Clears the current selection in the page.
 	 */
 	clearSelection: function()
+	{
+		if (document.selection)
 		{
-			if (document.selection)
+			return function()
 			{
-				return function()
+				document.selection.empty();
+			};
+		}
+		else if (window.getSelection)
+		{
+			return function()
+			{
+				if (window.getSelection().empty)
 				{
-					document.selection.empty();
-				};
-			}
-			else if (window.getSelection)
-			{
-				return function()
+					window.getSelection().empty();
+				}
+				else if (window.getSelection().removeAllRanges)
 				{
 					window.getSelection().removeAllRanges();
-				};
-			}
-			else
-			{
-				return function() {};
-			}
+				}
+			};
 		}
-		(),
+		else
+		{
+			return function() { };
+		}
+	}(),
 
 	/**
 	 * Function: getPrettyXML
@@ -3098,7 +3104,8 @@ var mxUtils = {
 	 */
 	getTextContent: function(node)
 	{
-		if (node.innerText !== undefined)
+		// Only IE10-
+		if (mxClient.IS_IE && node.innerText !== undefined)
 		{
 			return node.innerText;
 		}
@@ -12496,8 +12503,9 @@ mxWindow.prototype.show = function()
 	this.activate();
 
 	var style = mxUtils.getCurrentStyle(this.contentWrapper);
-
-	if (!mxClient.IS_QUIRKS && (style.overflow == 'auto' || this.resize != null))
+	
+	if (!mxClient.IS_QUIRKS && (style.overflow == 'auto' || this.resize != null) &&
+		this.contentWrapper.style.display != 'none')
 	{
 		this.contentWrapper.style.height = (this.div.offsetHeight -
 			this.title.offsetHeight - this.contentHeightCorrection) + 'px';
@@ -13098,6 +13106,14 @@ mxDragSource.prototype.dragElementZIndex = 100;
 mxDragSource.prototype.dragElementOpacity = 70;
 
 /**
+ * Variable: checkEventSource
+ * 
+ * Whether the event source should be checked in <graphContainerEvent>. Default
+ * is true.
+ */
+mxDragSource.prototype.checkEventSource = true;
+
+/**
  * Function: isEnabled
  *
  * Returns <enabled>.
@@ -13278,6 +13294,11 @@ mxDragSource.prototype.startDrag = function(evt)
 	this.dragElement.style.position = 'absolute';
 	this.dragElement.style.zIndex = this.dragElementZIndex;
 	mxUtils.setOpacity(this.dragElement, this.dragElementOpacity);
+
+	if (this.checkEventSource && mxClient.IS_SVG)
+	{
+		this.dragElement.style.pointerEvents = 'none';
+	}
 };
 
 /**
@@ -13312,6 +13333,18 @@ mxDragSource.prototype.removeDragElement = function()
 };
 
 /**
+ * Function: getElementForEvent
+ * 
+ * Returns the topmost element under the given event.
+ */
+mxDragSource.prototype.getElementForEvent = function(evt)
+{
+	return ((mxEvent.isTouchEvent(evt) || mxEvent.isPenEvent(evt)) ?
+			document.elementFromPoint(mxEvent.getClientX(evt), mxEvent.getClientY(evt)) :
+				mxEvent.getSource(evt));
+};
+
+/**
  * Function: graphContainsEvent
  *
  * Returns true if the given graph contains the given event.
@@ -13322,9 +13355,18 @@ mxDragSource.prototype.graphContainsEvent = function(graph, evt)
 	var y = mxEvent.getClientY(evt);
 	var offset = mxUtils.getOffset(graph.container);
 	var origin = mxUtils.getScrollOrigin();
+	var elt = this.getElementForEvent(evt);
+	
+	if (this.checkEventSource)
+	{
+		while (elt != null && elt != graph.container)
+		{
+			elt = elt.parentNode;
+		}
+	}
 
 	// Checks if event is inside the bounds of the graph container
-	return x >= offset.x - origin.x && y >= offset.y - origin.y &&
+	return elt != null && x >= offset.x - origin.x && y >= offset.y - origin.y &&
 		x <= offset.x - origin.x + graph.container.offsetWidth &&
 		y <= offset.y - origin.y + graph.container.offsetHeight;
 };
@@ -13456,7 +13498,12 @@ mxDragSource.prototype.dragEnter = function(graph, evt)
 	graph.isMouseDown = true;
 	graph.isMouseTrigger = mxEvent.isMouseEvent(evt);
 	this.previewElement = this.createPreviewElement(graph);
-
+	
+	if (this.previewElement != null && this.checkEventSource && mxClient.IS_SVG)
+	{
+		this.previewElement.style.pointerEvents = 'none';
+	}
+	
 	// Guide is only needed if preview element is used
 	if (this.isGuidesEnabled() && this.previewElement != null)
 	{
@@ -13598,8 +13645,8 @@ mxDragSource.prototype.dragOver = function(graph, evt)
  */
 mxDragSource.prototype.drop = function(graph, evt, dropTarget, x, y)
 {
-	this.dropHandler(graph, evt, dropTarget, x, y);
-
+	this.dropHandler.apply(this, arguments);
+	
 	// Had to move this to after the insert because it will
 	// affect the scrollbars of the window in IE to try and
 	// make the complete container visible.
@@ -18536,6 +18583,13 @@ mxSvgCanvas2D.prototype.imageOffset = 0;
 mxSvgCanvas2D.prototype.strokeTolerance = 0;
 
 /**
+ * Variable: minStrokeWidth
+ * 
+ * Minimum stroke width for output.
+ */
+mxSvgCanvas2D.prototype.minStrokeWidth = 1;
+
+/**
  * Variable: refCount
  *
  * Local counter for references in SVG export.
@@ -19006,7 +19060,7 @@ mxSvgCanvas2D.prototype.updateFill = function()
  */
 mxSvgCanvas2D.prototype.getCurrentStrokeWidth = function()
 {
-	return Math.max(1, this.format(this.state.strokeWidth * this.state.scale));
+	return Math.max(this.minStrokeWidth, Math.max(0.01, this.format(this.state.strokeWidth * this.state.scale)));
 };
 
 /**
@@ -22866,6 +22920,13 @@ mxShape.prototype.scale = 1;
 mxShape.prototype.antiAlias = true;
 
 /**
+ * Variable: minSvgStrokeWidth
+ * 
+ * Minimum stroke width for SVG output.
+ */
+mxShape.prototype.minSvgStrokeWidth = 1;
+
+/**
  * Variable: bounds
  *
  * Holds the <mxRectangle> that specifies the bounds of this shape.
@@ -23408,6 +23469,8 @@ mxShape.prototype.createSvgCanvas = function()
 		this.node.removeAttribute('transform');
 	}
 
+	canvas.minStrokeWidth = this.minSvgStrokeWidth;
+	
 	if (!this.antiAlias)
 	{
 		// Rounds all numbers in the SVG output to integers
@@ -23651,6 +23714,27 @@ mxShape.prototype.destroyCanvas = function(canvas)
  */
 mxShape.prototype.paint = function(c)
 {
+	var strokeDrawn = false;
+	
+	if (c != null && this.outline)
+	{
+		var stroke = c.stroke;
+		
+		c.stroke = function()
+		{
+			strokeDrawn = true;
+			stroke.apply(this, arguments);
+		};
+
+		var fillAndStroke = c.fillAndStroke;
+		
+		c.fillAndStroke = function()
+		{
+			strokeDrawn = true;
+			fillAndStroke.apply(this, arguments);
+		};
+	}
+
 	// Scale is passed-through to canvas
 	var s = this.scale;
 	var x = this.bounds.x / s;
@@ -23727,6 +23811,13 @@ mxShape.prototype.paint = function(c)
 	if (bg != null && c.state != null && c.state.transform != null)
 	{
 		bg.setAttribute('transform', c.state.transform);
+	}
+	
+	// Draws highlight rectangle if no stroke was used
+	if (c != null && this.outline && !strokeDrawn)
+	{
+		c.rect(x, y, w, h);
+		c.stroke();
 	}
 };
 
@@ -47560,6 +47651,13 @@ mxCellRenderer.prototype.legacySpacing = true;
 mxCellRenderer.prototype.antiAlias = true;
 
 /**
+ * Variable: minSvgStrokeWidth
+ * 
+ * Minimum stroke width for SVG output.
+ */
+mxCellRenderer.prototype.minSvgStrokeWidth = 1;
+
+/**
  * Variable: forceControlClickHandler
  *
  * Specifies if the enabled state of the graph should be ignored in the control
@@ -48949,6 +49047,7 @@ mxCellRenderer.prototype.redrawShape = function(state, force, rendering)
 
 		if (state.shape != null)
 		{
+			state.shape.minSvgStrokeWidth = this.minSvgStrokeWidth;
 			state.shape.antiAlias = this.antiAlias;
 
 			this.createIndicatorShape(state);
@@ -56737,8 +56836,8 @@ mxGraph.prototype.fit = function(border, keepOrigin, margin, enabled, ignoreWidt
 				w2 = Math.max(w2, this.backgroundImage.width - bounds.x / s);
 				h2 = Math.max(h2, this.backgroundImage.height - bounds.y / s);
 			}
-
-			var b = ((keepOrigin) ? border : 2 * border) + margin;
+			
+			var b = ((keepOrigin) ? border : 2 * border) + margin + 1;
 
 			w1 -= b;
 			h1 -= b;
@@ -56812,10 +56911,10 @@ mxGraph.prototype.sizeDidChange = function()
 	if (this.container != null)
 	{
 		var border = this.getBorder();
-
-		var width = Math.max(0, bounds.x + bounds.width + border);
-		var height = Math.max(0, bounds.y + bounds.height + border);
-
+		
+		var width = Math.max(0, bounds.x + bounds.width + 2 * border * this.view.scale);
+		var height = Math.max(0, bounds.y + bounds.height + 2 * border * this.view.scale);
+		
 		if (this.minimumContainerSize != null)
 		{
 			width = Math.max(width, this.minimumContainerSize.width);
@@ -67206,7 +67305,8 @@ mxOutline.prototype.getSourceGraphBounds = function()
  */
 mxOutline.prototype.update = function(revalidate)
 {
-	if (this.source != null && this.outline != null)
+	if (this.source != null && this.source.container != null &&
+		this.outline != null && this.outline.container != null)
 	{
 		var sourceScale = this.source.view.scale;
 		var scaledGraphBounds = this.getSourceGraphBounds();
@@ -69845,8 +69945,8 @@ mxGraphHandler.prototype.mouseMove = function(sender, me)
 		// fired on the container with no associated state.
 		mxEvent.consume(me.getEvent());
 	}
-	else if ((this.isMoveEnabled() || this.isCloneEnabled()) && this.updateCursor &&
-		!me.isConsumed() && me.getState() != null && !graph.isMouseDown)
+	else if ((this.isMoveEnabled() || this.isCloneEnabled()) && this.updateCursor && !me.isConsumed() &&
+		(me.getState() != null || me.sourceState != null) && !graph.isMouseDown)
 	{
 		var cursor = graph.getCursorForMouseEvent(me);
 
@@ -69864,7 +69964,7 @@ mxGraphHandler.prototype.mouseMove = function(sender, me)
 
 		// Sets the cursor on the original source state under the mouse
 		// instead of the event source state which can be the parent
-		if (me.sourceState != null)
+		if (cursor != null && me.sourceState != null)
 		{
 			me.sourceState.setCursor(cursor);
 		}
@@ -72655,6 +72755,11 @@ mxConnectionHandler.prototype.updateCurrentState = function(me, point)
 		{
 			this.marker.process(me);
 			this.currentState = this.marker.getValidState();
+			
+			if (this.currentState != null && !this.isCellEnabled(this.currentState.cell))
+			{
+				this.currentState = null;
+			}
 		}
 
 		var outline = this.isOutlineConnectEvent(me);
@@ -72707,6 +72812,16 @@ mxConnectionHandler.prototype.updateCurrentState = function(me, point)
 			}
 		}
 	}
+};
+
+/**
+ * Function: isCellEnabled
+ * 
+ * Returns true if the given cell does not allow new connections to be created.
+ */
+mxConnectionHandler.prototype.isCellEnabled = function(cell)
+{
+	return true;
 };
 
 /**
@@ -73985,8 +74100,8 @@ mxConstraintHandler.prototype.getCellForEvent = function(me, point)
 			cell = parent;
 		}
 	}
-
-	return cell;
+	
+	return (this.graph.isCellLocked(cell)) ? null : cell;
 };
 
 /**
@@ -78147,7 +78262,13 @@ mxEdgeHandler.prototype.getPreviewTerminalState = function(me)
 	else if (!this.graph.isIgnoreTerminalEvent(me.getEvent()))
 	{
 		this.marker.process(me);
-
+		var state = this.marker.getValidState();
+		
+		if (state != null && this.graph.isCellLocked(state.cell))
+		{
+			this.marker.reset();
+		}
+		
 		return this.marker.getValidState();
 	}
 	else
@@ -78482,7 +78603,13 @@ mxEdgeHandler.prototype.mouseMove = function(sender, me)
 					terminalState = null;
 				}
 			}
-
+			
+			if (terminalState != null && this.graph.isCellLocked(terminalState.cell))
+			{
+				terminalState = null;
+				this.marker.reset();
+			}
+			
 			var clone = this.clonePreviewState(this.currentPoint, (terminalState != null) ? terminalState.cell : null);
 			this.updatePreviewState(clone, this.currentPoint, terminalState, me, outline);
 
@@ -79692,8 +79819,11 @@ mxEdgeSegmentHandler.prototype.getCurrentPoints = function()
 	if (pts != null)
 	{
 		// Special case for straight edges where we add a virtual middle handle for moving the edge
-		if (pts.length == 2 || (pts.length == 3 && (pts[0].x == pts[1].x && pts[1].x == pts[2].x ||
-				pts[0].y == pts[1].y && pts[1].y == pts[2].y)))
+		var tol = Math.max(1, this.graph.view.scale);
+		
+		if (pts.length == 2 || (pts.length == 3 &&
+			(Math.abs(pts[0].x - pts[1].x) < tol && Math.abs(pts[1].x - pts[2].x) < tol ||
+			Math.abs(pts[0].y - pts[1].y) < tol && Math.abs(pts[1].y - pts[2].y) < tol)))
 		{
 			var cx = pts[0].x + (pts[pts.length - 1].x - pts[0].x) / 2;
 			var cy = pts[0].y + (pts[pts.length - 1].y - pts[0].y) / 2;
@@ -80655,6 +80785,16 @@ mxTooltipHandler.prototype.init = function()
 };
 
 /**
+ * Function: getStateForEvent
+ * 
+ * Returns the <mxCellState> to be used for showing a tooltip for this event.
+ */
+mxTooltipHandler.prototype.getStateForEvent = function(me)
+{
+	return me.getState();
+};
+
+/**
  * Function: mouseDown
  *
  * Handles the event by initiating a rubberband selection. By consuming the
@@ -80677,10 +80817,11 @@ mxTooltipHandler.prototype.mouseMove = function(sender, me)
 	if (me.getX() != this.lastX || me.getY() != this.lastY)
 	{
 		this.reset(me, true);
-
-		if (this.isHideOnHover() || me.getState() != this.state || (me.getSource() != this.node &&
-				(!this.stateSource || (me.getState() != null && this.stateSource ==
-					(me.isSource(me.getState().shape) || !me.isSource(me.getState().text))))))
+		var state = this.getStateForEvent(me);
+		
+		if (this.isHideOnHover() || state != this.state || (me.getSource() != this.node &&
+			(!this.stateSource || (state != null && this.stateSource ==
+			(me.isSource(state.shape) || !me.isSource(state.text))))))
 		{
 			this.hideTooltip();
 		}
@@ -80721,16 +80862,16 @@ mxTooltipHandler.prototype.resetTimer = function()
  *
  * Resets and/or restarts the timer to trigger the display of the tooltip.
  */
-mxTooltipHandler.prototype.reset = function(me, restart)
+mxTooltipHandler.prototype.reset = function(me, restart, state)
 {
 	if (!this.ignoreTouchEvents || mxEvent.isMouseEvent(me.getEvent()))
 	{
 		this.resetTimer();
-
-		if (restart && this.isEnabled() && me.getState() != null && (this.div == null ||
-				this.div.style.visibility == 'hidden'))
+		state = (state != null) ? state : this.getStateForEvent(me);
+		
+		if (restart && this.isEnabled() && state != null && (this.div == null ||
+			this.div.style.visibility == 'hidden'))
 		{
-			var state = me.getState();
 			var node = me.getSource();
 			var x = me.getX();
 			var y = me.getY();

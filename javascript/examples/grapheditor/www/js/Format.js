@@ -50,7 +50,12 @@ Format.prototype.init = function()
 	{
 		this.refresh();
 	}));
-
+	
+	editor.addListener('autosaveChanged', mxUtils.bind(this, function()
+	{
+		this.refresh();
+	}));
+	
 	this.refresh();
 };
 
@@ -273,8 +278,9 @@ Format.prototype.isRoundedState = function(state)
 Format.prototype.isLineJumpState = function(state)
 {
 	var shape = mxUtils.getValue(state.style, mxConstants.STYLE_SHAPE, null);
-
-	return shape == 'connector' || shape == 'filledEdge';
+	var curved = mxUtils.getValue(state.style, mxConstants.STYLE_CURVED, false);
+	
+	return !curved && (shape == 'connector' || shape == 'filledEdge');
 };
 
 /**
@@ -908,8 +914,6 @@ BaseFormatPanel.prototype.createOption = function(label, isCheckedFn, setChecked
 
 			apply(cb.checked);
 		}
-
-		mxEvent.consume(evt);
 	});
 
 	apply(value);
@@ -1290,8 +1294,8 @@ BaseFormatPanel.prototype.createRelativeOption = function(label, key, width, han
 	div.style.paddingBottom = '10px';
 	mxUtils.write(div, label);
 	div.style.fontWeight = 'bold';
-
-	function update(evt)
+	
+	var update = mxUtils.bind(this, function(evt)
 	{
 		if (handler != null)
 		{
@@ -1312,13 +1316,15 @@ BaseFormatPanel.prototype.createRelativeOption = function(label, key, width, han
 				}
 
 				graph.setCellStyles(key, value, graph.getSelectionCells());
+				this.editorUi.fireEvent(new mxEventObject('styleChanged', 'keys', [key],
+					'values', [value], 'cells', graph.getSelectionCells()));
 			}
 
 			input.value = ((value != null) ? value : '100') + ' %';
 		}
 
 		mxEvent.consume(evt);
-	};
+	});
 
 	var input = this.addUnitInput(div, '%', 20, width, update, 10, -15, handler != null);
 
@@ -2810,40 +2816,41 @@ TextFormatPanel.prototype.addFont = function(container)
 				var container = (selection.rangeCount > 0) ? selection.getRangeAt(0).commonAncestorContainer :
 					graph.cellEditor.textarea;
 
-				function updateSize(elt, ignoreContains)
+			function updateSize(elt, ignoreContains)
+			{
+				if (elt != graph.cellEditor.textarea && graph.cellEditor.textarea.contains(elt) &&
+					(ignoreContains || selection.containsNode(elt, true)))
 				{
-					if (elt != graph.cellEditor.textarea && (ignoreContains || selection.containsNode(elt, true)))
+					if (elt.nodeName == 'FONT')
 					{
-						if (elt.nodeName == 'FONT')
+						elt.removeAttribute('size');
+						elt.style.fontSize = fontSize + 'px';
+					}
+					else
+					{
+						var css = mxUtils.getCurrentStyle(elt);
+						
+						if (css.fontSize != fontSize + 'px')
 						{
-							elt.removeAttribute('size');
-							elt.style.fontSize = fontSize + 'px';
-						}
-						else
-						{
-							var css = mxUtils.getCurrentStyle(elt);
-
-							if (css.fontSize != fontSize + 'px')
+							if (mxUtils.getCurrentStyle(elt.parentNode).fontSize != fontSize + 'px')
 							{
-								if (mxUtils.getCurrentStyle(elt.parentNode).fontSize != fontSize + 'px')
-								{
-									elt.style.fontSize = fontSize + 'px';
-								}
-								else
-								{
-									elt.style.fontSize = '';
-								}
+								elt.style.fontSize = fontSize + 'px';
+							}
+							else
+							{
+								elt.style.fontSize = '';
 							}
 						}
 					}
-				};
-
-				// Wraps text node or mixed selection with leading text in a font element
-				if (container == graph.cellEditor.textarea ||
-					container.nodeType != mxConstants.NODETYPE_ELEMENT)
-				{
-					document.execCommand('fontSize', false, '1');
 				}
+			};
+			
+			// Wraps text node or mixed selection with leading text in a font element
+			if (container == graph.cellEditor.textarea ||
+				container.nodeType != mxConstants.NODETYPE_ELEMENT)
+			{
+				document.execCommand('fontSize', false, '1');
+			}
 
 				if (container != graph.cellEditor.textarea)
 				{
@@ -2861,23 +2868,58 @@ TextFormatPanel.prototype.addFont = function(container)
 					}
 				}
 
-				input.value = fontSize + ' pt';
+			input.value = fontSize + ' pt';
+		}
+		else if (window.getSelection || document.selection)
+		{
+			// Checks selection
+			var par = null;
+			
+			if (document.selection)
+			{
+				par = document.selection.createRange().parentElement();
 			}
 			else
 			{
+				var selection = window.getSelection();
+				
+				if (selection.rangeCount > 0)
+				{
+					par = selection.getRangeAt(0).commonAncestorContainer;
+				}
+			}
+			
+			// Node.contains does not work for text nodes in IE11
+			function isOrContains(container, node)
+			{
+			    while (node != null)
+			    {
+			        if (node === container)
+			        {
+			            return true;
+			        }
+			        
+			        node = node.parentNode;
+			    }
+			    
+			    return false;
+			};
+			
+			if (par != null && isOrContains(graph.cellEditor.textarea, par))
+			{
 				pendingFontSize = fontSize;
-
+				
 				// Workaround for can't set font size in px is to change font size afterwards
 				document.execCommand('fontSize', false, '4');
 				var elts = graph.cellEditor.textarea.getElementsByTagName('font');
-
+				
 				for (var i = 0; i < elts.length; i++)
 				{
 					if (elts[i].getAttribute('size') == '4')
 					{
 						elts[i].removeAttribute('size');
 						elts[i].style.fontSize = pendingFontSize + 'px';
-
+			
 						// Overrides fontSize in input with the one just assigned as a workaround
 						// for potential fontSize values of parent elements that don't match
 						window.setTimeout(function()
@@ -2885,13 +2927,14 @@ TextFormatPanel.prototype.addFont = function(container)
 							input.value = pendingFontSize + ' pt';
 							pendingFontSize = null;
 						}, 0);
-
+						
 						break;
 					}
 				}
 			}
-		}, true);
-
+		}
+	}, true);
+	
 	var stepper = this.createStepper(input, inputUpdate, 1, 10, true, Menus.prototype.defaultFontSize);
 	stepper.style.display = input.style.display;
 	stepper.style.marginTop = '4px';
@@ -3103,8 +3146,8 @@ TextFormatPanel.prototype.addFont = function(container)
 
 				node = graph.cellEditor.textarea.firstChild;
 			}
-
-			if (node != null && node != graph.cellEditor.textarea)
+			
+			if (node != null && node != graph.cellEditor.textarea && graph.cellEditor.textarea.contains(node))
 			{
 				node.style.lineHeight = value + '%';
 			}
@@ -3793,7 +3836,13 @@ StyleFormatPanel.prototype.init = function()
 	var editor = ui.editor;
 	var graph = editor.graph;
 	var ss = this.format.getSelectionState();
-
+	
+	if (ss.containsImage && ss.vertices.length == 1 && ss.style.shape == 'image' &&
+		ss.style.image != null && ss.style.image.substring(0, 19) == 'data:image/svg+xml;')
+	{
+		this.container.appendChild(this.addSvgStyles(this.createPanel()));
+	}
+	
 	if (!ss.containsImage || ss.style.shape == 'image')
 	{
 		this.container.appendChild(this.addFill(this.createPanel()));
@@ -3814,6 +3863,136 @@ StyleFormatPanel.prototype.init = function()
 	}
 
 	this.container.appendChild(this.addStyleOps(opsPanel));
+};
+
+/**
+ * Use browser for parsing CSS.
+ */
+StyleFormatPanel.prototype.getCssRules = function(css)
+{
+	var doc = document.implementation.createHTMLDocument('');
+	var styleElement = document.createElement('style');
+	
+	mxUtils.setTextContent(styleElement, css);
+	doc.body.appendChild(styleElement);
+	
+	return styleElement.sheet.cssRules;
+};
+
+/**
+ * Adds the label menu items to the given menu and parent.
+ */
+StyleFormatPanel.prototype.addSvgStyles = function(container)
+{
+	var ui = this.editorUi;
+	var graph = ui.editor.graph;
+	var ss = this.format.getSelectionState();
+	container.style.paddingTop = '6px';
+	container.style.paddingBottom = '6px';
+	container.style.fontWeight = 'bold';
+	container.style.display = 'none';
+
+	try
+	{
+		var exp = ss.style.editableCssRules;
+		
+		if (exp != null)
+		{
+			var regex = new RegExp(exp);
+			
+			var data = ss.style.image.substring(ss.style.image.indexOf(',') + 1);
+			var xml = (window.atob) ? atob(data) : Base64.decode(data, true);
+			var svg = mxUtils.parseXml(xml);
+			
+			if (svg != null)
+			{
+				var styles = svg.getElementsByTagName('style');
+				
+				for (var i = 0; i < styles.length; i++)
+				{
+					var rules = this.getCssRules(mxUtils.getTextContent(styles[i]));
+					
+					for (var j = 0; j < rules.length; j++)
+					{
+						this.addSvgRule(container, rules[j], svg, styles[i], rules, j, regex);
+					}
+				}
+			}
+		}
+	}
+	catch (e)
+	{
+		// ignore
+	}
+	
+	return container;
+};
+
+/**
+ * Adds the label menu items to the given menu and parent.
+ */
+StyleFormatPanel.prototype.addSvgRule = function(container, rule, svg, styleElem, rules, ruleIndex, regex)
+{
+	var ui = this.editorUi;
+	var graph = ui.editor.graph;
+	
+	if (regex.test(rule.selectorText))
+	{
+		function rgb2hex(rgb)
+		{
+			 rgb = rgb.match(/^rgba?[\s+]?\([\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?/i);
+			 
+			 return (rgb && rgb.length === 4) ? "#" +
+			  ("0" + parseInt(rgb[1],10).toString(16)).slice(-2) +
+			  ("0" + parseInt(rgb[2],10).toString(16)).slice(-2) +
+			  ("0" + parseInt(rgb[3],10).toString(16)).slice(-2) : '';
+		};
+		
+		var addStyleRule = mxUtils.bind(this, function(rule, key, label)
+		{
+			if (rule.style[key] != '')
+			{
+				var option = this.createColorOption(label + ' ' + rule.selectorText, function()
+				{
+					return rgb2hex(rule.style[key]);
+				}, function(color)
+				{
+					rules[ruleIndex].style[key] = color;
+					var cssTxt = '';
+					
+					for (var i = 0; i < rules.length; i++) 
+					{
+						cssTxt += rules[i].cssText + ' ';
+					}
+					
+					styleElem.textContent = cssTxt;
+					var xml = mxUtils.getXml(svg.documentElement);
+					
+					graph.setCellStyles(mxConstants.STYLE_IMAGE, 'data:image/svg+xml,' +
+						((window.btoa) ? btoa(xml) : Base64.encode(xml, true)),
+						graph.getSelectionCells());
+				}, '#ffffff',
+				{
+					install: function(apply)
+					{
+						// ignore
+					},
+					destroy: function()
+					{
+						// ignore
+					}
+				});
+			
+				container.appendChild(option);
+				
+				// Shows container if rules are added
+				container.style.display = '';
+			}
+		});
+		
+		addStyleRule(rule, 'fill', mxResources.get('fill'));
+		addStyleRule(rule, 'stroke', mxResources.get('line'));
+	}
 };
 
 /**
@@ -3902,8 +4081,9 @@ StyleFormatPanel.prototype.addFill = function(container)
 	});
 
 	var fillKey = (ss.style.shape == 'image') ? mxConstants.STYLE_IMAGE_BACKGROUND : mxConstants.STYLE_FILLCOLOR;
-
-	var fillPanel = this.createCellColorOption(mxResources.get('fill'), fillKey, '#ffffff');
+	var label = (ss.style.shape == 'image') ? mxResources.get('background') : mxResources.get('fill');
+	
+	var fillPanel = this.createCellColorOption(label, fillKey, '#ffffff');
 	fillPanel.style.fontWeight = 'bold';
 
 	var tmpColor = mxUtils.getValue(ss.style, fillKey, null);
@@ -4075,8 +4255,9 @@ StyleFormatPanel.prototype.addStroke = function(container)
 	});
 
 	var strokeKey = (ss.style.shape == 'image') ? mxConstants.STYLE_IMAGE_BORDER : mxConstants.STYLE_STROKECOLOR;
-
-	var lineColor = this.createCellColorOption(mxResources.get('line'), strokeKey, '#000000');
+	var label = (ss.style.shape == 'image') ? mxResources.get('border') : mxResources.get('line');
+	
+	var lineColor = this.createCellColorOption(label, strokeKey, '#000000');
 	lineColor.appendChild(styleSelect);
 	colorPanel.appendChild(lineColor);
 
@@ -5222,7 +5403,6 @@ DiagramFormatPanel.prototype.addGridOption = function(container)
 			if (color == mxConstants.NONE)
 			{
 				graph.setGridEnabled(false);
-				ui.fireEvent(new mxEventObject('gridEnabledChanged'));
 			}
 			else
 			{
@@ -5232,6 +5412,7 @@ DiagramFormatPanel.prototype.addGridOption = function(container)
 
 			input.style.display = (graph.isGridEnabled()) ? '' : 'none';
 			stepper.style.display = input.style.display;
+			ui.fireEvent(new mxEventObject('gridEnabledChanged'));
 		}, '#e0e0e0',
 		{
 			install: function(apply)

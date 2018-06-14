@@ -25,7 +25,7 @@ Actions.prototype.init = function()
 	};
 
 	// File actions
-	this.addAction('new...', function() { window.open(ui.getUrl()); });
+	this.addAction('new...', function() { graph.openLink(ui.getUrl()); });
 	this.addAction('open...', function()
 	{
 		window.openNew = true;
@@ -261,7 +261,7 @@ Actions.prototype.init = function()
 		if (cell != null)
 		{
 			var dlg = new EditDataDialog(ui, cell);
-			ui.showDialog(dlg.container, 320, 320, true, false, null, false);
+			ui.showDialog(dlg.container, 340, 340, true, false, null, false);
 			dlg.init();
 		}
 	}, null, null, Editor.ctrlKey + '+M');
@@ -291,14 +291,14 @@ Actions.prototype.init = function()
 			ui.showDialog(dlg.container, 320, 200, true, true);
 			dlg.init();
 		}
-	});
+	}, null, null, 'Alt+Shift+T');
 	this.addAction('openLink', function()
 	{
 		var link = graph.getLinkForCell(graph.getSelectionCell());
 		
 		if (link != null)
 		{
-			window.open(link);
+			graph.openLink(link);
 		}
 	});
 	this.addAction('editLink...', function()
@@ -316,7 +316,7 @@ Actions.prototype.init = function()
     				graph.setLinkForCell(cell, (link.length > 0) ? link : null);
 			});
 		}
-	});
+	}, null, null, 'Alt+Shift+L');
 	this.addAction('insertLink...', function()
 	{
 		if (graph.isEnabled() && !graph.isCellLocked(graph.getDefaultParent()))
@@ -587,8 +587,8 @@ Actions.prototype.init = function()
 		if (mxUtils.hasScrollbars(graph.container))
 		{
 			var pad = graph.getPagePadding();
-			graph.container.scrollTop = pad.y * graph.view.scale;
-			graph.container.scrollLeft = Math.min(pad.x * graph.view.scale, (graph.container.scrollWidth - graph.container.clientWidth) / 2);
+			graph.container.scrollTop = pad.y * graph.view.scale - 1;
+			graph.container.scrollLeft = Math.min(pad.x * graph.view.scale, (graph.container.scrollWidth - graph.container.clientWidth) / 2) - 1;
 		}
 	}), null, null, Editor.ctrlKey + '+J');
 	this.addAction('fitTwoPages', mxUtils.bind(this, function()
@@ -755,7 +755,7 @@ Actions.prototype.init = function()
 			ext = '_' + mxClient.language;
 		}
 		
-		window.open(RESOURCES_PATH + '/help' + ext + '.html');
+		graph.openLink(RESOURCES_PATH + '/help' + ext + '.html');
 	});
 	
 	var showingAbout = false;

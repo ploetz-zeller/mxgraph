@@ -487,14 +487,14 @@ EditorUi = function(editor, container, lightbox)
 	];
 
 	// Keys that are ignored together (if one appears all are ignored)
-	var keyGroups = [
-		['startArrow', 'startFill', 'startSize', 'endArrow', 'endFill', 'endSize', 'jettySize', 'orthogonalLoop'],
-		['strokeColor', 'strokeWidth'],
-		['fillColor', 'gradientColor'],
-		valueStyles, ['align'],
-		['html']
-	];
-
+	var keyGroups = [['startArrow', 'startFill', 'startSize', 'endArrow', 'endFill', 'endSize', 'jettySize', 'orthogonalLoop'],
+	                 ['strokeColor', 'strokeWidth'],
+	                 ['fillColor', 'gradientColor'],
+	                 valueStyles,
+	                 ['opacity'],
+	                 ['align'],
+	                 ['html']];
+	
 	// Adds all keys used above to the styles array
 	for (var i = 0; i < keyGroups.length; i++)
 	{
@@ -867,22 +867,25 @@ EditorUi = function(editor, container, lightbox)
 	// Timeout is workaround for old IE versions which have a delay for DOM client sizes.
 	// Should not use delay > 0 to avoid handle multiple repaints during window resize
 	this.resizeHandler = mxUtils.bind(this, function()
-	{
-		window.setTimeout(mxUtils.bind(this, function()
-		{
-			this.refresh();
-		}), 0);
-	});
-
-	mxEvent.addListener(window, 'resize', this.resizeHandler);
-
-	this.orientationChangeHandler = mxUtils.bind(this, function()
-	{
-		this.refresh();
-	});
-
-	mxEvent.addListener(window, 'orientationchange', this.orientationChangeHandler);
-
+   	{
+   		window.setTimeout(mxUtils.bind(this, function()
+   		{
+   			if (this.editor.graph != null)
+   			{
+   				this.refresh();
+   			}
+   		}), 0);
+   	});
+	
+   	mxEvent.addListener(window, 'resize', this.resizeHandler);
+   	
+   	this.orientationChangeHandler = mxUtils.bind(this, function()
+   	{
+   		this.refresh();
+   	});
+   	
+   	mxEvent.addListener(window, 'orientationchange', this.orientationChangeHandler);
+   	
 	// Workaround for bug on iOS see
 	// http://stackoverflow.com/questions/19012135/ios-7-ipad-safari-landscape-innerheight-outerheight-layout-issue
 	if (mxClient.IS_IOS && !window.navigator.standalone)
@@ -1327,8 +1330,6 @@ EditorUi.prototype.initClipboard = function()
  */
 EditorUi.prototype.initCanvas = function()
 {
-	var graph = this.editor.graph;
-
 	// Initial page layout view, scrollBuffer and timer-based scrolling
 	var graph = this.editor.graph;
 	graph.timerAutoScroll = true;
@@ -1365,8 +1366,8 @@ EditorUi.prototype.initCanvas = function()
 	// Scales pages/graph to fit available size
 	var resize = null;
 	var ui = this;
-
-	if (this.editor.chromeless)
+	
+	if (this.editor.isChromelessView())
 	{
 		resize = mxUtils.bind(this, function(autoscale, maxScale, cx, cy)
 		{
@@ -1522,7 +1523,7 @@ EditorUi.prototype.initCanvas = function()
 				this.actions.get('previousPage').funct();
 				mxEvent.consume(evt);
 			}), Editor.previousLargeImage, mxResources.get('previousPage'));
-
+			
 			var pageInfo = document.createElement('div');
 			pageInfo.style.display = 'inline-block';
 			pageInfo.style.verticalAlign = 'top';
@@ -1586,7 +1587,7 @@ EditorUi.prototype.initCanvas = function()
 
 			addButton(mxUtils.bind(this, function(evt)
 			{
-				if (graph.lightbox)
+				if (graph.isLightboxView())
 				{
 					if (graph.view.scale == 1)
 					{
@@ -1722,7 +1723,7 @@ EditorUi.prototype.initCanvas = function()
 					}
 					else
 					{
-						window.open(this.editor.editButtonLink, 'editWindow');
+						graph.openLink(this.editor.editButtonLink, 'editWindow');
 					}
 
 					mxEvent.consume(evt);
@@ -2014,8 +2015,7 @@ EditorUi.prototype.initCanvas = function()
 	{
 		// Ctrl+wheel (or pinch on touchpad) is a native browser zoom event is OS X
 		// LATER: Add support for zoom via pinch on trackpad for Chrome in OS X
-		if ((mxEvent.isAltDown(evt) || (mxEvent.isControlDown(evt) && !mxClient.IS_MAC) ||
-				graph.panningHandler.isActive()) && (this.dialogs == null || this.dialogs.length == 0))
+		if ((this.dialogs == null || this.dialogs.length == 0) && graph.isZoomWheelEvent(evt))
 		{
 			var source = mxEvent.getSource(evt);
 
@@ -2157,8 +2157,8 @@ EditorUi.prototype.addBeforeUnloadListener = function()
 	// This must be disabled during save and image export
 	window.onbeforeunload = mxUtils.bind(this, function()
 	{
-		PZ.Sy.Std.UI.toggleLoadingBar(false);
-		if (!this.editor.chromeless)
+	    PZ.Sy.Std.UI.toggleLoadingBar(false);
+		if (!this.editor.isChromelessView())
 		{
 			return this.onBeforeUnload();
 		}
@@ -2448,15 +2448,16 @@ EditorUi.prototype.resetScrollbars = function()
 			graph.view.setTranslate(0, 0);
 		}
 	}
-	else if (!this.editor.chromeless)
+	else if (!this.editor.isChromelessView())
 	{
 		if (mxUtils.hasScrollbars(graph.container))
 		{
 			if (graph.pageVisible)
 			{
 				var pad = graph.getPagePadding();
-				graph.container.scrollTop = Math.floor(pad.y - this.editor.initialTopSpacing);
-				graph.container.scrollLeft = Math.floor(Math.min(pad.x, (graph.container.scrollWidth - graph.container.clientWidth) / 2));
+				graph.container.scrollTop = Math.floor(pad.y - this.editor.initialTopSpacing) - 1;
+				graph.container.scrollLeft = Math.floor(Math.min(pad.x,
+					(graph.container.scrollWidth - graph.container.clientWidth) / 2)) - 1;
 
 				// Scrolls graph to visible area
 				var bounds = graph.getGraphBounds();
@@ -2754,21 +2755,21 @@ EditorUi.prototype.updateActionStates = function()
 
 	if (cells != null)
 	{
-		for (var i = 0; i < cells.length; i++)
-		{
-			var cell = cells[i];
-
-			if (graph.getModel().isEdge(cell))
-			{
-				edgeSelected = true;
-			}
-
-			if (graph.getModel().isVertex(cell))
-			{
-				vertexSelected = true;
-			}
-
-			if (edgeSelected && vertexSelected)
+    	for (var i = 0; i < cells.length; i++)
+    	{
+    		var cell = cells[i];
+    		
+    		if (graph.getModel().isEdge(cell))
+    		{
+    			edgeSelected = true;
+    		}
+    		
+    		if (graph.getModel().isVertex(cell))
+    		{
+    			vertexSelected = true;
+    		}
+    		
+    		if (edgeSelected && vertexSelected)
 			{
 				break;
 			}
@@ -3014,6 +3015,10 @@ EditorUi.prototype.createDivs = function()
 	if (!this.editor.chromeless)
 	{
 		this.tabContainer = this.createTabContainer();
+	}
+	else
+	{
+		this.diagramContainer.style.border = 'none';
 	}
 };
 
@@ -3295,7 +3300,8 @@ EditorUi.prototype.hideDialog = function(cancel)
 		{
 			this.editor.graph.container.focus();
 		}
-
+		
+		mxUtils.clearSelection();
 		this.editor.fireEvent(new mxEventObject('hideDialog'));
 	}
 };
@@ -3716,7 +3722,8 @@ EditorUi.prototype.createKeyHandler = function(editor)
 	// Ignores graph enabled state but not chromeless state
 	keyHandler.isEnabledForEvent = function(evt)
 	{
-		return (!mxEvent.isConsumed(evt) && this.isGraphEvent(evt) && this.isEnabled());
+		return (!mxEvent.isConsumed(evt) && this.isGraphEvent(evt) && this.isEnabled() &&
+			(editorUi.dialogs == null || editorUi.dialogs.length == 0));
 	};
 
 	// Routes command-key to control-key on Mac
@@ -3875,10 +3882,11 @@ EditorUi.prototype.createKeyHandler = function(editor)
 	var keyHandlerGetFunction = keyHandler.getFunction;
 
 	// Alt+Shift+Keycode mapping to action
-	var altShiftActions = {
-		67: this.actions.get('clearWaypoints'), // Alt+Shift+C
-		65: this.actions.get('connectionArrows'), // Alt+Shift+A
-		80: this.actions.get('connectionPoints') // Alt+Shift+P
+	var altShiftActions = {67: this.actions.get('clearWaypoints'), // Alt+Shift+C
+						  65: this.actions.get('connectionArrows'), // Alt+Shift+A
+						  76: this.actions.get('editLink'), // Alt+Shift+L
+						  80: this.actions.get('connectionPoints'), // Alt+Shift+P
+						  84: this.actions.get('editTooltip') // Alt+Shift+T
 	};
 
 	mxKeyHandler.prototype.getFunction = function(evt)
