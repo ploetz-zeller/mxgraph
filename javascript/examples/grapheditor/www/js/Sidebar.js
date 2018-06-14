@@ -203,6 +203,11 @@ Sidebar.prototype.maxTooltipWidth = 400;
 Sidebar.prototype.maxTooltipHeight = 400;
 
 /**
+ * P+Z: Specifies the tool tip offset
+ */
+Sidebar.prototype.tooltipTopOffset = 150;
+
+/**
  * Specifies if stencil files should be loaded and added to the search index
  * when stencil palettes are added. If this is false then the stencil files
  * are lazy-loaded when the palette is shown.
@@ -394,7 +399,8 @@ Sidebar.prototype.showTooltip = function(elt, cells, w, h, title, showLabel)
 
                 // P+Z Set ToolTip Image
                 var toolTipImageTop = Math.max(0, this.editorUi.container.offsetTop + this.container.offsetTop + elt.offsetTop - this.container.scrollTop + 10);
-                this.tooltipImage.style.top = this.tooltipTopOffset + toolTipImageTop + 'px';
+				this.tooltipImage.style.top = this.tooltipTopOffset + toolTipImageTop + 'px';
+				this.tooltipImage.style.left = left - 13 + 'px';
 			});
 
 			if (this.tooltip != null && this.tooltip.style.display != 'none')
@@ -631,7 +637,7 @@ Sidebar.prototype.addSearchPalette = function(expand)
 	input.style.overflow = 'hidden';
 	input.style.boxSizing = 'border-box';
 	input.style.border = 'solid 1px #d5d5d5';
-	input.style.borderRadius = '4px';
+	// input.style.borderRadius = '4px'; P+Z: Deactivate border radius
 	input.style.width = '100%';
 	input.style.outline = 'none';
 	input.style.padding = '6px';
@@ -650,7 +656,7 @@ Sidebar.prototype.addSearchPalette = function(expand)
 	}
 	else
 	{
-		cross.style.top = '1px';
+		cross.style.top = '-3px'; /* P+Z: Adjust top of search icon */
 	}
 
 	// Needed to block event transparency in IE

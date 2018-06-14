@@ -28,3 +28,4 @@ window.mxLoadStylesheets = false;
 window.mxBasePath = window.mxBasePath || '../../../src';
 window.mxLanguage = window.mxLanguage || PZ.Sy.Std.Cultures.getByLcid(PZ.Sy.Std.Navigation.getRouteValue('lcid', 1033)).ISO2 || urlParams['lang'];
 window.mxDefaultLanguage = "none";
+window.mxImageBasePath = window.IMAGE_PATH;
