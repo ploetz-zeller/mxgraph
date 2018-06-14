@@ -51,6 +51,9 @@ EditorUI.js
 Format.js
 - Remove width for inner div in color button
 - Set width for color button to 45px
+- Changed text color for format panel
+- Added P+Z custom button style class
+- Add add image button in format panel when images are selected
 
 Menus.js
 - Use P+Z custom image upload dialog for Insert dropdown to toolbar
