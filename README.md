@@ -56,6 +56,9 @@ Format.js
 - Added P+Z custom button style class
 - Add add image button in format panel when images are selected
 
+Init.js
+- Use Symbio resources
+
 Menus.js
 - Use P+Z custom image upload dialog for Insert dropdown to toolbar
 - Add Edit FreeText to context menu only when P+Z custom free text shapes are selected

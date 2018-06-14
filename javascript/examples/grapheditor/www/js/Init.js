@@ -1,49 +1,21 @@
-﻿// Public global variables
-var MAX_REQUEST_SIZE = 10485760;
-var MAX_AREA = 10000 * 10000;
+﻿// urlParams is null when used for embedding
+window.urlParams = window.urlParams || {};
 
-// URLs for save and export
-var EXPORT_URL = PZ.Sy.Std.Navigation.toAbsoluteUrl('~/{storagecollection}/{tenant}/{data}/{lcid}/BasePlugin/Diagram/ExportDiagram');
-var SAVE_URL = PZ.Sy.Std.Navigation.toAbsoluteUrl('~/{storagecollection}/{tenant}/{data}/{lcid}/BasePlugin/Diagram/SaveDiagramEditor');
-var RESOURCES_PATH = PZ.Sy.Std.Navigation.toAbsoluteUrl('~/{storagecollection}/{tenant}/{data}/{lcid}/Resources/DiagramEditorResources');
-var RESOURCE_BASE = RESOURCES_PATH + '/';
-var STENCIL_PATH = PZ.Sy.Std.Navigation.toAbsoluteUrl('~/Images/DiagramEditor');
-var IMAGE_PATH = PZ.Sy.Std.Navigation.toAbsoluteUrl('~/Images/DiagramEditor');
-var STYLE_PATH = 'styles';
-var CSS_PATH = 'styles';
-var OPEN_FORM = 'open.html';
+// Public global variables
+window.MAX_REQUEST_SIZE = window.MAX_REQUEST_SIZE  || 10485760;
+window.MAX_AREA = window.MAX_AREA || 15000 * 15000;
 
-// Specifies connection mode for touch devices (at least one should be true)
-var tapAndHoldStartsConnection = false;
-var showConnectorImg = true;
-
-// Parses URL parameters. Supported parameters are:
-// - lang=xy: Specifies the language of the user interface.
-// - touch=1: Enables a touch-style user interface.
-// - storage=local: Enables HTML5 local storage.
-// - chrome=0: Chromeless mode.
-var urlParams = (function(url)
-{
-	var result = new Object();
-	var idx = url.lastIndexOf('?');
-
-	if (idx > 0)
-	{
-		var params = url.substring(idx + 1).split('&');
-
-		for (var i = 0; i < params.length; i++)
-		{
-			idx = params[i].indexOf('=');
-
-			if (idx > 0)
-			{
-				result[params[i].substring(0, idx)] = params[i].substring(idx + 1);
-			}
-		}
-	}
-
-	return result;
-})(window.location.href);
+// P+Z: URLs for save and export
+window.EXPORT_URL = window.EXPORT_URL || PZ.Sy.Std.Navigation.toAbsoluteUrl('~/{storagecollection}/{tenant}/{data}/{lcid}/BasePlugin/Diagram/ExportDiagram');
+window.SAVE_URL = window.SAVE_URL || PZ.Sy.Std.Navigation.toAbsoluteUrl('~/{storagecollection}/{tenant}/{data}/{lcid}/BasePlugin/Diagram/SaveDiagramEditor');
+window.OPEN_URL = window.OPEN_URL || '/open';
+window.RESOURCES_PATH = window.RESOURCES_PATH || PZ.Sy.Std.Navigation.toAbsoluteUrl('~/{storagecollection}/{tenant}/{data}/{lcid}/Resources/DiagramEditorResources');;
+window.RESOURCE_BASE = window.RESOURCE_BASE || window.RESOURCES_PATH + '/';
+window.STENCIL_PATH = window.STENCIL_PATH || PZ.Sy.Std.Navigation.toAbsoluteUrl('~/Images/DiagramEditor');;
+window.IMAGE_PATH = window.IMAGE_PATH || PZ.Sy.Std.Navigation.toAbsoluteUrl('~/Images/DiagramEditor');
+window.STYLE_PATH = window.STYLE_PATH || 'styles';
+window.CSS_PATH = window.CSS_PATH || 'styles';
+window.OPEN_FORM = window.OPEN_FORM || 'open.html';
 
 // Sets the base path, the UI language via URL param and configures the
 // supported languages to avoid 404s. The loading of all core language
@@ -52,10 +24,7 @@ var urlParams = (function(url)
 // files (the special bundle and the default bundle) is disabled to
 // save a GET request. This requires that all resources be present in
 // each properties file since only one file is loaded.
-mxLoadResources = false;
-mxLoadStylesheets = false;
-mxLanguage = PZ.Sy.Std.Cultures.getByLcid(PZ.Sy.Std.Navigation.getRouteValue('lcid', 1033)).ISO2;
-mxDefaultLanguage = "none";
-mxImageBasePath = IMAGE_PATH;
-var STYLE_FONTFAMILY = "Segoe UI";
-var STYLE_FONTSIZE = "12px";
+window.mxLoadStylesheets = false;
+window.mxBasePath = window.mxBasePath || '../../../src';
+window.mxLanguage = window.mxLanguage || PZ.Sy.Std.Cultures.getByLcid(PZ.Sy.Std.Navigation.getRouteValue('lcid', 1033)).ISO2 || urlParams['lang'];
+window.mxDefaultLanguage = "none";
