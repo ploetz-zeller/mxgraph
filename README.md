@@ -47,6 +47,7 @@ mxClient.js
 EditorUI.js
 - Set menubar height to 0
 - Deactivate menubar
+- Evaluate isCellUngroupable for ungroup button
 
 Format.js
 - Remove width for inner div in color button
@@ -63,6 +64,7 @@ Menus.js
 
 Sidebar.js
 - Deactivated (uncommented) some palettes
+- Fixed round and ellipsis shape
 - Don't use MSPointer events
 - Specified toolbar offset to 150px
 - Set correct toolbar offset and toolbar image offset

@@ -2796,7 +2796,7 @@ EditorUi.prototype.updateActionStates = function()
    	var oneVertexSelected = vertexSelected && graph.getSelectionCount() == 1;
 	this.actions.get('group').setEnabled(graph.getSelectionCount() > 1 ||
 		(oneVertexSelected && !graph.isContainer(graph.getSelectionCell())));
-	this.actions.get('ungroup').setEnabled(graph.getSelectionCount() == 1 &&
+	this.actions.get('ungroup').setEnabled(graph.getSelectionCount() == 1 && graph.isCellUngroupable(graph.getSelectionCell()) &&
 		(graph.getModel().getChildCount(graph.getSelectionCell()) > 0 ||
 		(oneVertexSelected && graph.isContainer(graph.getSelectionCell()))));
    	this.actions.get('removeFromGroup').setEnabled(oneVertexSelected &&
