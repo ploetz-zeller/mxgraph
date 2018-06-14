@@ -1,5 +1,6 @@
 {
     "js": {
-        "brace_style": "expand"
+        "brace_style": "expand",
+        "indent_with_tabs": true
     }
 }

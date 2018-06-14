@@ -24,25 +24,25 @@ var showConnectorImg = true;
 // - chrome=0: Chromeless mode.
 var urlParams = (function(url)
 {
-    var result = new Object();
-    var idx = url.lastIndexOf('?');
+	var result = new Object();
+	var idx = url.lastIndexOf('?');
 
-    if (idx > 0)
-    {
-        var params = url.substring(idx + 1).split('&');
+	if (idx > 0)
+	{
+		var params = url.substring(idx + 1).split('&');
 
-        for (var i = 0; i < params.length; i++)
-        {
-            idx = params[i].indexOf('=');
+		for (var i = 0; i < params.length; i++)
+		{
+			idx = params[i].indexOf('=');
 
-            if (idx > 0)
-            {
-                result[params[i].substring(0, idx)] = params[i].substring(idx + 1);
-            }
-        }
-    }
+			if (idx > 0)
+			{
+				result[params[i].substring(0, idx)] = params[i].substring(idx + 1);
+			}
+		}
+	}
 
-    return result;
+	return result;
 })(window.location.href);
 
 // Sets the base path, the UI language via URL param and configures the
