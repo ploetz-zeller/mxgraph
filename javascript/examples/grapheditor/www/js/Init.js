@@ -2,7 +2,7 @@
 window.urlParams = window.urlParams || {};
 
 // Public global variables
-window.MAX_REQUEST_SIZE = window.MAX_REQUEST_SIZE  || 10485760;
+window.MAX_REQUEST_SIZE = window.MAX_REQUEST_SIZE || 10485760;
 window.MAX_AREA = window.MAX_AREA || 15000 * 15000;
 
 // P+Z: URLs for save and export
@@ -25,7 +25,8 @@ window.OPEN_FORM = window.OPEN_FORM || 'open.html';
 // save a GET request. This requires that all resources be present in
 // each properties file since only one file is loaded.
 window.mxLoadStylesheets = false;
-window.mxBasePath = window.mxBasePath || '../../../src';
+window.mxLoadResources = false;
+window.mxBasePath = window.mxBasePath || window.RESOURCES_PATH || '../../../src';
 window.mxLanguage = window.mxLanguage || PZ.Sy.Std.Cultures.getByLcid(PZ.Sy.Std.Navigation.getRouteValue('lcid', 1033)).ISO2 || urlParams['lang'];
 window.mxDefaultLanguage = "none";
 window.mxImageBasePath = window.IMAGE_PATH;
