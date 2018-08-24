@@ -77,3 +77,5 @@ Toolbar.js
 
 grapheditor.txt and grapheditor_de.txt
 - Added P+Z custom localizations
+
+
