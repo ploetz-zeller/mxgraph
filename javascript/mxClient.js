@@ -18335,7 +18335,7 @@ mxSvgCanvas2D.prototype.createDiv = function (str) {
  */
 mxSvgCanvas2D.prototype.updateText = function (x, y, w, h, align, valign, wrap, overflow, clip, rotation, node) {
     if (node != null && node.firstChild != null && node.firstChild.firstChild != null) {
-        this.updateTextNodes(x, y, w, h, align, valign, wrap, overflow, clip, rotation, node.firstChild);
+        this.updateTextNodes(x, y, w, h, align, valign, wrap, overflow, clip, rotation, node.firstChild, null, null, null, null);
     }
 };
 
@@ -18372,7 +18372,7 @@ mxSvgCanvas2D.prototype.addForeignObject = function (x, y, w, h, str, align, val
     fo.appendChild(div);
     group.appendChild(fo);
 
-    this.updateTextNodes(x, y, w, h, align, valign, wrap, overflow, clip, rotation, group);
+    this.updateTextNodes(x, y, w, h, align, valign, wrap, overflow, clip, rotation, group, displayValueSource, referenceMarker, maxWidth, maxHeight);
 
     // P+Z: BeginRegion: Text alignment
     // Since text element handling uses max size of the parent element (for free text and links),
@@ -18437,7 +18437,7 @@ mxSvgCanvas2D.prototype.addForeignObject = function (x, y, w, h, str, align, val
 /**
  * Updates existing DOM nodes for text rendering.
  */
-mxSvgCanvas2D.prototype.updateTextNodes = function (x, y, w, h, align, valign, wrap, overflow, clip, rotation, g) {
+mxSvgCanvas2D.prototype.updateTextNodes = function (x, y, w, h, align, valign, wrap, overflow, clip, rotation, g, displayValueSource, referenceMarker, maxWidth, maxHeight) {
     var s = this.state.scale;
 
     mxSvgCanvas2D.createCss(w + 2, h, align, valign, wrap, overflow, clip,
@@ -18456,8 +18456,18 @@ mxSvgCanvas2D.prototype.updateTextNodes = function (x, y, w, h, align, valign, w
             var div = fo.firstChild;
             var box = div.firstChild;
             var text = box.firstChild;
+            if (displayValueSource)
+                text.setAttribute('data-pz-display-value-source', displayValueSource);
+            if (referenceMarker)
+                text.setAttribute('data-pz-reference-marker', referenceMarker);
+            if (maxWidth)
+                text.setAttribute('data-pz-display-value-max-width', maxWidth);
+            if (maxHeight)
+                text.setAttribute('data-pz-display-value-max-height', maxHeight);
+
             var r = ((this.rotateHtml) ? this.state.rotation : 0) + ((rotation != null) ? rotation : 0);
-            var t = ((this.foOffset != 0) ? 'translate(' + this.foOffset + ' ' + this.foOffset + ')' : '') +
+            // P+Z: Change for setting rotation to the text with no position change
+            var t = ((this.foOffset != 0) ? 'translate(' + this.foOffset + 'px,' + this.foOffset + 'px)' : '') +
                 ((s != 1) ? 'scale(' + s + ')' : '');
 
             text.setAttribute('style', block);
@@ -18485,16 +18495,13 @@ mxSvgCanvas2D.prototype.updateTextNodes = function (x, y, w, h, align, valign, w
             }
 
             div.setAttribute('style', flex + 'margin-left: ' + Math.round(x + dx) + 'px;');
-            t += ((r != 0) ? ('rotate(' + r + ' ' + x + ' ' + y + ')') : '');
+            // P+Z: Change for setting rotation to the text with no position change
+            t += ((r != 0) ? ('rotate(' + r + 'deg)') : '');
 
             // Output allows for reflow but Safari cannot use absolute position,
             // transforms or opacity. https://bugs.webkit.org/show_bug.cgi?id=23113
-            if (t != '') {
-                g.setAttribute('transform', t);
-            }
-            else {
-                g.removeAttribute('transform');
-            }
+            // P+Z: Change for setting rotation to the text with no position change
+            box.setAttribute('style', 'transform: ' + t + ';');
 
             if (this.state.alpha != 1) {
                 g.setAttribute('opacity', this.state.alpha);
@@ -19652,14 +19659,6 @@ mxVmlCanvas2D.prototype.text = function (x, y, w, h, str, align, valign, wrap, f
             var dy = margin.y;
 
             var div = this.createDiv(str, align, valign, overflow);
-            if (displayValueSource)
-                div.setAttribute('data-pz-display-value-source', displayValueSource);
-            if (referenceMarker)
-                div.setAttribute('data-pz-reference-marker', referenceMarker);
-            if (maxWidth)
-                div.setAttribute('data-pz-display-value-max-width', maxWidth);
-            if (maxHeight)
-                div.setAttribute('data-pz-display-value-max-height', maxHeight);
             var inner = this.createElement('div');
 
             if (dir != null) {
