@@ -10825,6 +10825,8 @@ var mxClipboard =
             for (var i = 0; i < cells.length; i++) {
                 if (cells[i].hasOwnProperty("data-pz-display-value-source")) {
                     cells[i]["data-pz-display-value-source"] = "ATX_FREE_TEXT:[ITEM_ORIGIN_KEY]";
+                    // Mark cell as pasted cell
+                    cells[i]["data-pz-is-pasted"] = "true";
                 }
             }
 
