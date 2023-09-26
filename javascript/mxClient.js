@@ -10819,6 +10819,17 @@ var mxClipboard =
             cells = graph.getImportableCells(mxClipboard.getCells());
             var delta = mxClipboard.insertCount * mxClipboard.STEPSIZE;
             var parent = graph.getDefaultParent();
+
+            // P+Z #54237
+            // Reset free text origin key on pasting to force creation of a fresh OTX_TEXT.
+            for (var i = 0; i < cells.length; i++) {
+                if (cells[i].hasOwnProperty("data-pz-display-value-source")) {
+                    cells[i]["data-pz-display-value-source"] = "ATX_FREE_TEXT:[ITEM_ORIGIN_KEY]";
+                    // Mark cell as pasted cell
+                    cells[i]["data-pz-is-pasted"] = "true";
+                }
+            }
+
             cells = graph.importCells(cells, delta, delta, parent);
 
             // Increments the counter and selects the inserted cells
