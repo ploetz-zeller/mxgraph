@@ -18458,7 +18458,9 @@ mxSvgCanvas2D.prototype.updateTextNodes = function (x, y, w, h, align, valign, w
         ((valign == mxConstants.ALIGN_TOP) ? 'flex-start' :
             ((valign == mxConstants.ALIGN_BOTTOM) ? 'flex-end' : 'center')) + '; ' +
         'justify-content: unsafe ' + ((align == mxConstants.ALIGN_LEFT) ? 'flex-start' :
-            ((align == mxConstants.ALIGN_RIGHT) ? 'flex-end' : 'center')) + '; ',
+            ((align == mxConstants.ALIGN_RIGHT) ? 'flex-end' : 'center')) + '; ' +
+        'text-align: ' + ((align == mxConstants.ALIGN_LEFT) ? 'left' :
+            ((align == mxConstants.ALIGN_RIGHT) ? 'right' : 'center')) + '; ',
         this.getTextCss(), s, mxUtils.bind(this, function (dx, dy, flex, item, block) {
             x += this.state.dx;
             y += this.state.dy;
