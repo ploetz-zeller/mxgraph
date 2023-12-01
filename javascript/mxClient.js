@@ -6545,7 +6545,7 @@ var mxConstants =
      * 
      * Defines the default family for all fonts. Default is Arial,Helvetica.
      */
-    DEFAULT_FONTFAMILY: 'Segoe UI, Tahoma, Arial, Verdana', // P+Z
+    DEFAULT_FONTFAMILY: 'Segoe UI, Tahoma, Arial, Verdana', // Symbioworld
 
     /**
      * Variable: DEFAULT_FONTSIZE
@@ -6568,7 +6568,7 @@ var mxConstants =
      * 
      * Defines the default line height for text labels. Default is 1.2.
      */
-    LINE_HEIGHT: 1.5, // P+Z
+    LINE_HEIGHT: 1.5, // Symbioworld
 
     /**
      * Variable: WORD_WRAP
@@ -10820,7 +10820,7 @@ var mxClipboard =
             var delta = mxClipboard.insertCount * mxClipboard.STEPSIZE;
             var parent = graph.getDefaultParent();
 
-            // P+Z #54237
+            // Symbioworld #54237
             // Reset free text origin key on pasting to force creation of a fresh OTX_TEXT.
             for (var i = 0; i < cells.length; i++) {
                 if (cells[i].hasOwnProperty("data-pz-display-value-source")) {
@@ -15425,7 +15425,7 @@ mxImageExport.prototype.getShapeIdForCellState = function (state, canvas) {
     return null;
 };
 /**
- * Function: getLinkIdForCellState   // P+Z
+ * Function: getLinkIdForCellState   // Symbioworld
  * 
  * Returns the link id for the given cell state and canvas. This returns null.
  */
@@ -15440,9 +15440,9 @@ mxImageExport.prototype.getLinkIdForCellState = function (state, canvas) {
 mxImageExport.prototype.drawCellState = function (state, canvas) {
     // Experimental feature
     var link = this.getLinkForCellState(state, canvas);
-    // P+Z
+    // Symbioworld
     var shapeId = this.getShapeIdForCellState(state, canvas);
-    // P+Z
+    // Symbioworld
     var linkId = this.getLinkIdForCellState(state, canvas);
     if (link != null) {
         canvas.setLink(link, shapeId, linkId);
@@ -17119,7 +17119,7 @@ mxXmlCanvas2D.prototype.close = function () {
  * rotation - Number that specifies the angle of the rotation around the anchor point of the text.
  * dir - Optional string that specifies the text direction. Possible values are rtl and lrt.
  */
-// P+Z: Extended constructor
+//Symbioworld: Extended constructor
 mxXmlCanvas2D.prototype.text = function (x, y, w, h, str, align, valign, wrap, format, overflow, clip, rotation, dir, displayValueSource, referenceMarker, maxWidth, maxHeight) {
     if (this.textEnabled && str != null) {
         if (mxUtils.isNode(str)) {
@@ -17132,16 +17132,16 @@ mxXmlCanvas2D.prototype.text = function (x, y, w, h, str, align, valign, wrap, f
         elem.setAttribute('w', this.format(w));
         elem.setAttribute('h', this.format(h));
         elem.setAttribute('str', str);
-        // P+Z: Extended attribute settings
+        // Symbioworld: Extended attribute settings
         if (displayValueSource)
             elem.setAttribute('data-pz-display-value-source', displayValueSource);
-        // P+Z: Extended attribute settings
+        // Symbioworld: Extended attribute settings
         if (referenceMarker)
             elem.setAttribute('data-pz-reference-marker', referenceMarker);
-        // P+Z: Extended attribute settings
+        // Symbioworld: Extended attribute settings
         if (maxWidth)
             elem.setAttribute('data-pz-display-value-max-width', maxWidth);
-        // P+Z: Extended attribute settings
+        // Symbioworld: Extended attribute settings
         if (maxHeight)
             elem.setAttribute('data-pz-display-value-max-height', maxHeight);
 
@@ -17560,7 +17560,7 @@ mxSvgCanvas2D.prototype.getAlternateText = function (fo, x, y, w, h, str, align,
  * 
  * Returns the alternate content for the given foreignObject.
  */
-// P+Z: Extended constructor
+// Symbioworld: Extended constructor
 mxSvgCanvas2D.prototype.createAlternateContent = function (fo, x, y, w, h, str, align, valign, wrap, format, overflow, clip, rotation, displayValueSource, referenceMarker, maxWidth, maxHeight) {
     var text = this.getAlternateText(fo, x, y, w, h, str, align, valign, wrap, format, overflow, clip, rotation);
     var s = this.state;
@@ -17578,16 +17578,16 @@ mxSvgCanvas2D.prototype.createAlternateContent = function (fo, x, y, w, h, str, 
         alt.setAttribute('fill', s.fontColor || 'black');
         alt.setAttribute('font-family', s.fontFamily);
         alt.setAttribute('font-size', Math.round(s.fontSize) + 'px');
-        // P+Z: Extended attribute settings
+        // Symbioworld: Extended attribute settings
         if (displayValueSource)
             alt.setAttribute('data-pz-display-value-source', displayValueSource);
-        // P+Z: Extended attribute settings
+        // Symbioworld: Extended attribute settings
         if (referenceMarker)
             alt.setAttribute('data-pz-reference-marker', referenceMarker);
-        // P+Z: Extended attribute settings
+        // Symbioworld: Extended attribute settings
         if (maxWidth)
             alt.setAttribute('data-pz-display-value-max-width', maxWidth);
-        // P+Z: Extended attribute settings
+        // Symbioworld: Extended attribute settings
         if (maxHeight)
             alt.setAttribute('data-pz-display-value-max-height', maxHeight);
 
@@ -18015,7 +18015,7 @@ mxSvgCanvas2D.prototype.createShadow = function (node) {
  * 
  * Experimental implementation for hyperlinks.
  */
-// P+Z: Extended parameters
+// Symbioworld: Extended parameters
 mxSvgCanvas2D.prototype.setLink = function (link, shapeId, linkId) {
     if (link == null) {
         this.root = this.originalRoot;
@@ -18029,25 +18029,25 @@ mxSvgCanvas2D.prototype.setLink = function (link, shapeId, linkId) {
         // in all IE versions except quirks mode. KNOWN: Adds xlink namespace to each image tag in output.
         if (node.setAttributeNS == null || (this.root.ownerDocument != document && document.documentMode == null)) {
             node.setAttribute('xlink:href', link);
-            // P+Z
+            // Symbioworld
             if (shapeId != null) {
                 node.setAttribute('data-pz-shape-id', shapeId);
             }
             if (linkId != null) {
-                node.setAttribute('data-pz-link-id', shapeId);
+                node.setAttribute('data-pz-link-id', linkId);
             }
         }
         else {
             node.setAttributeNS(mxConstants.NS_XLINK, 'xlink:href', link);
-            // P+Z
+            // Symbioworld
             if (shapeId != null) {
                 node.setAttributeNS(mxConstants.NS_XLINK, 'data-pz-shape-id', shapeId);
             }
             if (linkId != null) {
-                node.setAttributeNS(mxConstants.NS_XLINK, 'data-pz-link-id', shapeId);
+                node.setAttributeNS(mxConstants.NS_XLINK, 'data-pz-link-id', linkId);
             }
         }
-        // P+Z: Set all pointer events for links
+        // Symbioworld: Set all pointer events for links
         node.style.pointerEvents = "all";
 
         this.root.appendChild(node);
@@ -18227,7 +18227,7 @@ mxSvgCanvas2D.prototype.image = function (x, y, w, h, src, aspect, flipH, flipV)
     }
 
     if (!this.pointerEvents) {
-        // P+Z change
+        // Symbioworld change
         //node.setAttribute('pointer-events', 'none');
     }
 
@@ -18355,11 +18355,11 @@ mxSvgCanvas2D.prototype.updateText = function (x, y, w, h, align, valign, wrap, 
  * 
  * Creates a foreignObject for the given string and adds it to the given root.
  */
-// P+Z: Extended constructor
+// Symbioworld: Extended constructor
 mxSvgCanvas2D.prototype.addForeignObject = function (x, y, w, h, str, align, valign, wrap, format, overflow, clip, rotation, dir, div, root, displayValueSource, referenceMarker, maxWidth, maxHeight) {
     var group = this.createElement('g');
     var fo = this.createElement('foreignObject');
-    // P+Z: Check, if free text is set
+    // Symbioworld: Check, if free text is set
     var isLinkText = displayValueSource && this.root.nodeName == 'a' && this.root.childElementCount == 1 && this.root.firstElementChild.nodeName == 'rect';
     var isText = displayValueSource
         && (displayValueSource.indexOf("ATX_FREE_TEXT") > -1 || isLinkText)
@@ -18385,7 +18385,7 @@ mxSvgCanvas2D.prototype.addForeignObject = function (x, y, w, h, str, align, val
 
     this.updateTextNodes(x, y, w, h, align, valign, wrap, overflow, clip, rotation, group, displayValueSource, referenceMarker, maxWidth, maxHeight);
 
-    // P+Z: BeginRegion: Text alignment
+    // Symbioworld: BeginRegion: Text alignment
     // Since text element handling uses max size of the parent element (for free text and links),
     // text content dimensions have to be evaluated also.
     var $innerTextElement = $(fo).find('*[data-pz-inner-text]');
@@ -18399,7 +18399,7 @@ mxSvgCanvas2D.prototype.addForeignObject = function (x, y, w, h, str, align, val
     }
     var x = (Math.round(x) + this.foOffset);
     var y = (Math.round(y) + this.foOffset);
-    // P+Z: Try to retrieve positioning information from corresponding rect for freetext display.
+    // Symbioworld: Try to retrieve positioning information from corresponding rect for freetext display.
     if (isText) {
         var rect = group.previousElementSibling;
         if (rect
@@ -18426,11 +18426,11 @@ mxSvgCanvas2D.prototype.addForeignObject = function (x, y, w, h, str, align, val
             group.setAttribute('data-pz-freetext-valign', valign);
         }
     }
-    // P+Z: EndRegion: Text alignment
+    // Symbioworld: EndRegion: Text alignment
 
     // Alternate content if foreignObject not supported
     if (this.root.ownerDocument != document) {
-        // P+Z: Extended call parameters
+        // Symbioworld: Extended call parameters
         var alt = this.createAlternateContent(fo, x, y, w, h, str, align, valign, wrap, format, overflow, clip, rotation, displayValueSource, referenceMarker, maxWidth, maxHeight);
 
         if (alt != null) {
@@ -18450,6 +18450,18 @@ mxSvgCanvas2D.prototype.addForeignObject = function (x, y, w, h, str, align, val
  */
 mxSvgCanvas2D.prototype.updateTextNodes = function (x, y, w, h, align, valign, wrap, overflow, clip, rotation, g, displayValueSource, referenceMarker, maxWidth, maxHeight) {
     var s = this.state.scale;
+
+    // Symbioworld: Helper method for calcuation of clamp size for sanitizing text overflow, if necessary.
+    function calculateLineclamp($multilineElement) {
+        if (!$multilineElement) {
+            return;
+        }
+        var lineHeight = parseFloat($multilineElement.css('line-height'));
+        var fontSize = parseFloat($multilineElement.css('font-size'));
+        var maxheight = parseFloat($multilineElement.attr('data-pz-display-value-max-height'));
+        var numberOfLines = Math.round(maxheight / (fontSize * lineHeight));
+        $multilineElement.css({ "-webkit-line-clamp": "" + numberOfLines + "" });
+    }
 
     mxSvgCanvas2D.createCss(w + 2, h, align, valign, wrap, overflow, clip,
         (this.state.fontBackgroundColor != null) ? this.state.fontBackgroundColor : null,
@@ -18479,11 +18491,22 @@ mxSvgCanvas2D.prototype.updateTextNodes = function (x, y, w, h, align, valign, w
                 text.setAttribute('data-pz-display-value-max-height', maxHeight);
 
             var r = ((this.rotateHtml) ? this.state.rotation : 0) + ((rotation != null) ? rotation : 0);
-            // P+Z: Change for setting rotation to the text with no position change
+            // Symbioworld: Change for setting rotation to the text with no position change
             var t = ((this.foOffset != 0) ? 'translate(' + this.foOffset + 'px,' + this.foOffset + 'px)' : '') +
                 ((s != 1) ? 'scale(' + s + ')' : '');
 
             text.setAttribute('style', block);
+
+            // Symbioworld: Sanitize text overflow, if necessary.
+            var currentValue = $(text).html();
+            if (currentValue && (currentValue.length > 20 || currentValue.indexOf("<br") > -1)) {
+                $(text).css("display", "-webkit-box");
+                $(text).css("-webkit-box-orient", "vertical");
+                $(text).css("overflow", "hidden");
+                $(text).css("text-overflow", "ellipsis");
+                calculateLineclamp($(text));
+            }
+
             box.setAttribute('style', item);
 
             // Workaround for clipping in Webkit with scrolling and zoom
@@ -18508,12 +18531,12 @@ mxSvgCanvas2D.prototype.updateTextNodes = function (x, y, w, h, align, valign, w
             }
 
             div.setAttribute('style', flex + 'margin-left: ' + Math.round(x + dx) + 'px;');
-            // P+Z: Change for setting rotation to the text with no position change
+            // Symbioworld: Change for setting rotation to the text with no position change
             t += ((r != 0) ? ('rotate(' + r + 'deg)') : '');
 
             // Output allows for reflow but Safari cannot use absolute position,
             // transforms or opacity. https://bugs.webkit.org/show_bug.cgi?id=23113
-            // P+Z: Change for setting rotation to the text with no position change
+            // Symbioworld: Change for setting rotation to the text with no position change
             box.setAttribute('style', 'transform: ' + t + ';');
 
             if (this.state.alpha != 1) {
@@ -18646,7 +18669,7 @@ mxSvgCanvas2D.prototype.getTextCss = function () {
  * foreignObject is supported and <foEnabled> is true. (This means IE9 and later
  * does currently not support HTML text as part of shapes.)
  */
-// P+Z: Extended constructor
+// Symbioworld: Extended constructor
 mxSvgCanvas2D.prototype.text = function (x, y, w, h, str, align, valign, wrap, format, overflow, clip, rotation, dir, displayValueSource, referenceMarker, maxWidth, maxHeight) {
     if (this.textEnabled && str != null) {
         rotation = (rotation != null) ? rotation : 0;
@@ -18659,13 +18682,13 @@ mxSvgCanvas2D.prototype.text = function (x, y, w, h, str, align, valign, wrap, f
                 if (dir != null) {
                     div.setAttribute('dir', dir);
                 }
-                //P+Z Extend parameters
+                //Symbioworld Extend parameters
                 this.addForeignObject(x, y, w, h, str, align, valign, wrap,
                     format, overflow, clip, rotation, dir, div, this.root, displayValueSource, referenceMarker, maxWidth, maxHeight);
             }
         }
         else {
-            //P+Z Extend parameters
+            //Symbioworld Extend parameters
             this.plainText(x + this.state.dx, y + this.state.dy, w, h, str,
                 align, valign, wrap, overflow, clip, rotation, dir, displayValueSource, referenceMarker, maxWidth, maxHeight);
         }
@@ -18713,7 +18736,7 @@ mxSvgCanvas2D.prototype.createClip = function (x, y, w, h) {
  * Paints the given text. Possible values for format are empty string for
  * plain text and html for HTML markup.
  */
-// P+Z: Extended constructor
+// Symbioworld: Extended constructor
 mxSvgCanvas2D.prototype.plainText = function (x, y, w, h, str, align, valign, wrap, overflow, clip, rotation, dir, displayValueSource, referenceMarker, maxWidth, maxHeight) {
     rotation = (rotation != null) ? rotation : 0;
     var s = this.state;
@@ -18832,16 +18855,16 @@ mxSvgCanvas2D.prototype.plainText = function (x, y, w, h, str, align, valign, wr
             // LATER: Match horizontal HTML alignment
             text.setAttribute('x', this.format(x * s.scale) + this.textOffset);
             text.setAttribute('y', this.format(cy * s.scale) + this.textOffset);
-            // P+Z: Extended attribute settings
+            // Symbioworld: Extended attribute settings
             if (displayValueSource)
                 text.setAttribute('data-pz-display-value-source', displayValueSource);
-            // P+Z: Extended attribute settings
+            // Symbioworld: Extended attribute settings
             if (referenceMarker)
                 text.setAttribute('data-pz-reference-marker', referenceMarker)
-            // P+Z: Extended attribute settings
+            // Symbioworld: Extended attribute settings
             if (maxWidth)
                 text.setAttribute('data-pz-display-value-max-width', maxWidth);
-            // P+Z: Extended attribute settings
+            // Symbioworld: Extended attribute settings
             if (maxHeight)
                 text.setAttribute('data-pz-display-value-max-height', maxHeight);
             mxUtils.write(text, lines[i]);
@@ -19622,7 +19645,7 @@ mxVmlCanvas2D.prototype.createDiv = function (str, align, valign, overflow) {
  * text and html for HTML markup. Clipping, text background and border are not
  * supported for plain text in VML.
  */
-// P+Z: Extended constructor
+// Symbioworld: Extended constructor
 mxVmlCanvas2D.prototype.text = function (x, y, w, h, str, align, valign, wrap, format, overflow, clip, rotation, dir, displayValueSource, referenceMarker, maxWidth, maxHeight) {
     if (this.textEnabled && str != null) {
         var s = this.state;
@@ -19896,7 +19919,7 @@ mxVmlCanvas2D.prototype.text = function (x, y, w, h, str, align, valign, wrap, f
             }
         }
         else {
-            //P+Z Extend parameters
+            //Symbioworld Extend parameters
             this.plainText(x, y, w, h, mxUtils.htmlEntities(str, false), align, valign, wrap, format, overflow, clip, rotation, dir, displayValueSource, referenceMarker, maxWidth, maxHeight);
         }
     }
@@ -19907,7 +19930,7 @@ mxVmlCanvas2D.prototype.text = function (x, y, w, h, str, align, valign, wrap, f
  * 
  * Paints the outline of the current path.
  */
-// P+Z: Extended constructor
+// Symbioworld: Extended constructor
 mxVmlCanvas2D.prototype.plainText = function (x, y, w, h, str, align, valign, wrap, format, overflow, clip, rotation, dir, displayValueSource, referenceMarker, maxWidth, maxHeight) {
     // TextDirection is ignored since this code is not used (format is always HTML in the text function)
     var s = this.state;
@@ -23435,7 +23458,7 @@ function mxPolyline(points, stroke, strokewidth) {
     mxShape.call(this);
     this.points = points;
     this.stroke = stroke;
-    // P+Z: Set default file color to #000000 for polylines
+    // Symbioworld: Set default file color to #000000 for polylines
     this.fill = '#000000';
     this.strokewidth = (strokewidth != null) ? strokewidth : 1;
 };
@@ -24344,6 +24367,9 @@ mxText.prototype.paint = function (c, update) {
         val = (!mxUtils.isNode(this.value) && this.replaceLinefeeds && fmt == 'html') ?
             val.replace(/\n/g, '<br/>') : val;
 
+        // Symbioworld: Unescape html tags and special chars.
+        val = $("<textarea />").html(val).text();
+
         var dir = this.textDirection;
 
         if (dir == mxConstants.TEXT_DIRECTION_AUTO && !realHtml) {
@@ -24353,30 +24379,30 @@ mxText.prototype.paint = function (c, update) {
         if (dir != mxConstants.TEXT_DIRECTION_LTR && dir != mxConstants.TEXT_DIRECTION_RTL) {
             dir = null;
         }
-        // P+Z: Extended attribute settings
+        // Symbioworld: Extended attribute settings
         var displayValueSource = this.state && this.state.cell && this.state.cell['data-pz-display-value-source']
             ? this.state.cell['data-pz-display-value-source']
             : null;
-        // P+Z: Extended attribute settings
+        // Symbioworld: Extended attribute settings
         var referenceMarker = this.state && this.state.cell && this.state.cell['data-pz-reference-marker']
             ? this.state.cell['data-pz-reference-marker']
             : null;
-        // P+Z: Extended attribute settings
+        // Symbioworld: Extended attribute settings
         var maxWidth = this.state && this.state.cell && this.state.cell['data-pz-display-value-max-width']
             ? this.state.cell['data-pz-display-value-max-width']
             : null;
-        // P+Z: Extended attribute settings
+        // Symbioworld: Extended attribute settings
         var maxHeight = this.state && this.state.cell && this.state.cell['data-pz-display-value-max-height']
             ? this.state.cell['data-pz-display-value-max-height']
             : null;
-        // P+Z: Extended attribute settings
+        // Symbioworld: Extended attribute settings
         if (referenceMarker && !displayValueSource) {
             var value = this.state.cell.value;
             displayValueSource = value && value.getAttribute ? value.getAttribute('data-pz-display-value-source') : null;
             maxWidth = value && value.getAttribute ? value.getAttribute('data-pz-display-value-max-width') : null;
             maxHeight = value && value.getAttribute ? value.getAttribute('data-pz-display-value-max-height') : null;
         }
-        // P+Z (#2487-5222): Adjust text dimensions
+        // Symbioworld (#2487-5222): Adjust text dimensions
         if (displayValueSource && this.state && this.state.cell && this.state.cell.parent) {
             if (this.state.cell.parent.geometry && maxWidth && maxHeight) {
                 w = maxWidth - this.state.cell.geometry.x;
@@ -24387,7 +24413,7 @@ mxText.prototype.paint = function (c, update) {
                 //maxHeight = h;
             }
         }
-        // P+Z: Extended call parameters
+        // Symbioworld: Extended call parameters
         c.text(x, y, w, h, val, this.align, this.valign, this.wrap, fmt, this.overflow,
             this.clipped, this.getTextRotation(), dir, displayValueSource, referenceMarker, maxWidth, maxHeight);
 
