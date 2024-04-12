@@ -83,8 +83,7 @@ function Sidebar(editorUi, container)
  */
 Sidebar.prototype.init = function()
 {
-	var dir = STENCIL_PATH;
-	
+	var dir = STENCIL_PATH;	
 	this.addSearchPalette(true);
     this.addGeneralPalette(true);
     // P+Z: Deactivated palettes
@@ -3305,54 +3304,81 @@ Sidebar.prototype.createEdgeTemplateFromCells = function(cells, width, height, t
 /**
  * Adds the given palette.
  */
-Sidebar.prototype.addPaletteFunctions = function(id, title, expanded, fns)
+Sidebar.prototype.addPaletteFunctions = function(id, title, expanded, fns, update)
 {
+    // Symbioworld 03-04-2024: Extend signature and introduce update.
 	this.addPalette(id, title, expanded, mxUtils.bind(this, function(content)
 	{
 		for (var i = 0; i < fns.length; i++)
 		{
 			content.appendChild(fns[i](content));
 		}
-	}));
+	}), update);
 };
 
 /**
  * Adds the given palette.
  */
-Sidebar.prototype.addPalette = function(id, title, expanded, onInit)
+Sidebar.prototype.addPalette = function(id, title, expanded, onInit, update)
 {
-	var elt = this.createTitle(title);
-	this.container.appendChild(elt);
-	
-	var div = document.createElement('div');
-	div.className = 'geSidebar';
-	
-	// Disables built-in pan and zoom in IE10 and later
-	if (mxClient.IS_POINTER)
-	{
-		div.style.touchAction = 'none';
-	}
+    // Symbioworld 03-04-2024: Extend signature and introduce update.
+    var updateExisting = update === true;
 
-	if (expanded)
-	{
-		onInit(div);
-		onInit = null;
-	}
-	else
-	{
-		div.style.display = 'none';
-	}
+    if (updateExisting) {
+        var elts = this.palettes[id];
+        if (elts === null || elts === undefined) {
+            return;
+        }
+
+        if (elts.length != 2) {
+            return;
+        }
+
+        var geSidebarDiv = elts[1].firstChild;
+
+        if (geSidebarDiv === null || geSidebarDiv === undefined) {
+            return;
+        }
+
+        if (expanded) {
+            onInit(geSidebarDiv);
+            onInit = null;
+        }
+    }
+    else {
+	    var elt = this.createTitle(title);
+	    this.container.appendChild(elt);
 	
-    this.addFoldingHandler(elt, div, onInit);
+	    var div = document.createElement('div');
+	    div.className = 'geSidebar';
 	
-	var outer = document.createElement('div');
-    outer.appendChild(div);
-    this.container.appendChild(outer);
+	    // Disables built-in pan and zoom in IE10 and later
+	    if (mxClient.IS_POINTER)
+	    {
+		    div.style.touchAction = 'none';
+	    }
+
+	    if (expanded)
+	    {
+		    onInit(div);
+		    onInit = null;
+	    }
+	    else
+	    {
+		    div.style.display = 'none';
+	    }
+	
+        this.addFoldingHandler(elt, div, onInit);
+	
+	    var outer = document.createElement('div');
+        outer.appendChild(div);
+        this.container.appendChild(outer);
     
-    // Keeps references to the DOM nodes
-    if (id != null)
-    {
-    		this.palettes[id] = [elt, outer];
+        // Keeps references to the DOM nodes
+        if (id != null)
+        {
+            this.palettes[id] = [elt, outer];
+        }
     }
     
     return div;
